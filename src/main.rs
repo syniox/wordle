@@ -1,8 +1,11 @@
 use console;
 use std::io::{self, Write};
 
-/// The main function for the Wordle game, implement your own logic here
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+mod args;
+use args::Args;
+use clap::Parser;
+
+fn check_tty() -> Result<(), Box<dyn std::error::Error>> {
     let is_tty = atty::is(atty::Stream::Stdout);
 
     if is_tty {
@@ -29,6 +32,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     println!("");
     // TODO: parse the arguments in `args`
+
+    Ok(())
+}
+
+/// The main function for the Wordle game, implement your own logic here
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    check_tty()?;
 
     Ok(())
 }
