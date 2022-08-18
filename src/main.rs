@@ -5,40 +5,37 @@ mod args;
 use args::Args;
 use clap::Parser;
 
-fn check_tty() -> Result<(), Box<dyn std::error::Error>> {
-    let is_tty = atty::is(atty::Stream::Stdout);
+/// The main function for the tty game
+fn main_tty(args: args::Args) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "I am in a tty. Please print {}!",
+        console::style("colorful characters").bold().blink().blue()
+    );
 
-    if is_tty {
-        println!(
-            "I am in a tty. Please print {}!",
-            console::style("colorful characters").bold().blink().blue()
-        );
-    } else {
-        println!("I am not in a tty. Please print according to test requirements!");
-    }
+    print!("{}", console::style("Your name: ").bold().red());
+    io::stdout().flush().unwrap();
 
-    if is_tty {
-        print!("{}", console::style("Your name: ").bold().red());
-        io::stdout().flush().unwrap();
-    }
     let mut line = String::new();
     io::stdin().read_line(&mut line)?;
     println!("Welcome to wordle, {}!", line.trim());
 
-    // example: print arguments
-    print!("Command line arguments: ");
-    for arg in std::env::args() {
-        print!("{} ", arg);
-    }
-    println!("");
-    // TODO: parse the arguments in `args`
+    Ok(())
+}
 
+/// The main function for the tests
+fn main_tst(args: args::Args) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
 /// The main function for the Wordle game, implement your own logic here
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    check_tty()?;
+    let is_tty = atty::is(atty::Stream::Stdout);
+    let args = Args::parse();
+    println!("{:?}",args); // REMEMBER TO REMOVE
 
-    Ok(())
+    if is_tty{
+        main_tty(args)
+    } else {
+        main_tst(args)
+    }
 }
