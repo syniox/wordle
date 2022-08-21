@@ -80,7 +80,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
         }
         if args.word.is_none() {
             let line = utils::read_line()?;
-            assert!(line == "N" || line == "Y");
+            assert!(line == "N" || line == "Y" || line == "");
             if line == "N" {
                 break;
             }

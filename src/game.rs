@@ -51,17 +51,6 @@ impl Stats {
     pub fn print_stats(&self) {
         let mut map = HashMap::<&str, i32>::new();
         // load stats into helper vaiables
-        /*
-        let (mut win_rounds, mut win_guesses) = (0, 0);
-        for game in self.games.iter() {
-            if let Some(guess) = game.guesses.last() {
-                if &game.answer == guess {
-                    win_rounds += 1;
-                    win_guesses += game.guesses.len();
-                }
-            }
-        }
-        */
         let (win_rounds, win_guesses) = self.games.iter()
             .filter(|x| Some(&x.answer) == x.guesses.last())
             .map(|x| (1, x.guesses.len()))
@@ -171,8 +160,8 @@ impl Game{
         // color other position
         for (i, (ca, cg)) in zip(answer.chars(), guess.chars()).enumerate() {
             let alpha_id = Self::alpha2id(cg);
-            cnt_alpha[alpha_id] -= 1;
             if ca != cg {
+                cnt_alpha[alpha_id] -= 1;
                 let color_id = Self::color2id(
                     if cnt_alpha[alpha_id] >= 0 { 'Y' } else { 'R' }
                     );
