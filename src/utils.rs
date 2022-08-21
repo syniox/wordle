@@ -5,11 +5,9 @@ pub const ROUNDS: i32 = 6;
 
 pub type ErrorT = Box<dyn std::error::Error>;
 
-/*
-pub fn apmax<T: Copy + std::cmp::PartialOrd<T>>(a: &mut T, b: &mut T) {
-    if a < b { *a = b.clone(); }
+pub fn apmax<T: Copy + std::cmp::Ord>(a: &mut T, b: T) {
+    if *a < b { *a = b; }
 }
-*/
 
 pub fn read_line() -> Result<String, ErrorT> {
     let mut line = String::new();

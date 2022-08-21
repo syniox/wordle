@@ -44,19 +44,24 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
     };
 
     let mut game = Game::new();
-    let answer = utils::read_word(Some(&final_words))?;
+    let answer = if let Some(w) = args.word {
+        w.clone()
+    } else {
+        utils::read_word(Some(&final_words))?
+    };
     game.set_answer(answer);
 
     for round in 0..utils::ROUNDS {
         let word = loop {
             if let Ok(word) = utils::read_word(Some(&valid_words)){
-                break word
-            } else {
-                println!("INVALID");
+                if !args.hard || game.hard_check(&word) {
+                    break word;
+                }
             }
+            println!("INVALID");
         };
-        let (win, word_color) = game.guess(word);
-        println!("{} {}", word_color, game.list_color());
+        let win = game.guess(word);
+        println!("{}", game);
         if win {
             println!("CORRECT {}", round+1);
             return Ok(());
