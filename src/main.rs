@@ -10,7 +10,7 @@ use clap::Parser;
 mod utils;
 
 mod game;
-use game::Game;
+use game::{Game, Stats};
 
 mod builtin_words;
 
@@ -43,31 +43,51 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
         unimplemented!();
     };
 
-    let mut game = Game::new();
-    let answer = if let Some(w) = args.word {
-        w.clone()
-    } else {
-        utils::read_word(Some(&final_words))?
-    };
-    game.set_answer(answer);
+    let mut stats = Stats::new();
 
-    for round in 0..utils::ROUNDS {
-        let word = loop {
-            if let Ok(word) = utils::read_word(Some(&valid_words)){
-                if !args.hard || game.hard_check(&word) {
-                    break word;
-                }
-            }
-            println!("INVALID");
+    loop {
+        let mut game = Game::new();
+        let answer = if let Some(w) = args.word.as_ref() {
+            w.clone()
+        } else {
+            utils::read_word(Some(&final_words))?
         };
-        let win = game.guess(word);
-        println!("{}", game);
-        if win {
-            println!("CORRECT {}", round+1);
-            return Ok(());
+        game.set_answer(answer);
+
+        let mut win = false;
+        for round in 0..utils::ROUNDS {
+            let word = loop {
+                if let Ok(word) = utils::read_word(Some(&valid_words)){
+                    if !args.hard || game.hard_check(&word) {
+                        break word;
+                    }
+                }
+                println!("INVALID");
+            };
+            win = game.guess(word);
+            println!("{}", game);
+            if win {
+                println!("CORRECT {}", round+1);
+                break;
+            }
+        }
+        if !win {
+            println!("FAILED {}", game.show_answer().to_ascii_uppercase());
+        }
+        if args.stats {
+            stats.store_game(game);
+            stats.print_stats();
+        }
+        if args.word.is_none() {
+            let line = utils::read_line()?;
+            assert!(line == "N" || line == "Y");
+            if line == "N" {
+                break;
+            }
+        } else {
+            break;
         }
     }
-    println!("FAILED {}", game.show_answer().to_ascii_uppercase());
     Ok(())
 }
 

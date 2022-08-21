@@ -1,4 +1,4 @@
-use std::{fmt, cmp, iter::zip};
+use std::{fmt, cmp, iter::zip, collections::HashMap};
 use serde::Serialize;
 
 use crate::{
@@ -10,6 +10,12 @@ use crate::{
 struct State {
     answer: String,
     guesses: Vec<String>
+}
+
+#[derive(Serialize)]
+pub struct Stats {
+    total_rounds: i32,
+    games: Vec<State>
 }
 
 pub struct Game {
@@ -26,6 +32,60 @@ pub struct Game {
 impl State {
     pub fn new() -> State {
         State { answer: String::new(), guesses: Vec::<String>::new() }
+    }
+}
+
+impl Stats {
+    fn stat_cmp((s1, i1): (&str, &i32), (s2, i2): (&str, &i32)) -> cmp::Ordering {
+        //TODO: check cmp for String
+        if *i1 == *i2 { s2.cmp(s1) } else { i1.cmp(i2) }
+    }
+
+    pub fn new() -> Stats {
+        Stats { total_rounds: 0, games: vec![] }
+    }
+    pub fn store_game(&mut self, game: Game) {
+        self.total_rounds += 1;
+        self.games.push(game.state);
+    }
+    pub fn print_stats(&self) {
+        let mut map = HashMap::<&str, i32>::new();
+        // load stats into helper vaiables
+        /*
+        let (mut win_rounds, mut win_guesses) = (0, 0);
+        for game in self.games.iter() {
+            if let Some(guess) = game.guesses.last() {
+                if &game.answer == guess {
+                    win_rounds += 1;
+                    win_guesses += game.guesses.len();
+                }
+            }
+        }
+        */
+        let (win_rounds, win_guesses) = self.games.iter()
+            .filter(|x| Some(&x.answer) == x.guesses.last())
+            .map(|x| (1, x.guesses.len()))
+            .fold((0,0), |acc, x| (acc.0 + x.0, acc.1 + x.1));
+        for game in self.games.iter() {
+            for guess in game.guesses.iter() {
+                map.entry(guess.as_str()).and_modify(|x| *x += 1).or_insert(1);
+            }
+        }
+        let avg_guesses = if win_rounds == 0 { 0f64 } else {
+            win_guesses as f64 / win_rounds as f64
+        };
+        println!("{} {} {:.2}", win_rounds, self.total_rounds - win_rounds, avg_guesses);
+        // Find words that used most
+        let mut w_list: Vec<(&&str, &i32)> = map.iter().collect();
+        w_list.sort_by(|(&s1, &i1), (&s2, &i2)| Self::stat_cmp((s1, &i1), (s2, &i2)));
+        w_list.reverse();
+        // TODO: use prettier oput
+        for (i, w) in w_list.iter().enumerate() {
+            if i == 5 { break; }
+            if i != 0 { print!(" "); }
+            print!("{} {}", w.0.to_ascii_uppercase(), w.1);
+        }
+        println!("");
     }
 }
 

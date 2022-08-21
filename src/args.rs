@@ -17,7 +17,7 @@ pub struct Args{
 
     /// Print statistic after every term
     #[clap(short = 't', long, value_parser)]
-    pub stat: bool,
+    pub stats: bool,
 
     /// Specify starting day
     #[clap(short, long, value_parser, default_value_t = 1)]
