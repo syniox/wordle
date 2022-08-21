@@ -87,7 +87,7 @@ impl fmt::Display for Game {
 
 impl Game{
     fn alpha2id(c: char) -> usize {
-        c as usize - 'a' as usize
+        c as usize - 'A' as usize
     }
     fn color2id(c: char) -> i8 {
         match c {

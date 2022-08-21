@@ -23,11 +23,14 @@ fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<S
         None => utils::from_arr(builtin_words::FINAL),
         Some(f) => utils::arr_from_file(f)
     };
-    let final_words = final_words_list.iter().map(|x| x.clone()).collect();
-    let valid_words: HashSet<String> = match args.aset.as_ref() {
+    final_words_list.iter_mut().for_each(|x| x.make_ascii_uppercase());
+    let final_words: HashSet<String> = final_words_list.iter().map(|x| x.clone()).collect();
+    let mut valid_words_list: Vec<String> = match args.aset.as_ref() {
         None => utils::from_arr(builtin_words::ACCEPTABLE),
         Some(f) => utils::arr_from_file(f)
     };
+    valid_words_list.iter_mut().for_each(|x| x.make_ascii_uppercase());
+    let valid_words: HashSet<String> = valid_words_list.into_iter().collect();
     for word in final_words_list.iter() {
         assert!(valid_words.contains(word));
     }
@@ -65,7 +68,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
     for day in args.day.unwrap()-1.. {
         let mut game = Game::new();
         let answer = if let Some(w) = args.word.as_ref() {
-            w.clone()
+            w.to_ascii_uppercase()
         } else if !args.random {
             //TODO check whether the word is valid
             utils::read_word(Some(&final_words))?

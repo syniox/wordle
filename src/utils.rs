@@ -17,11 +17,10 @@ pub fn read_line() -> Result<String, ErrorT> {
 }
 
 pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
-    let mut line = read_line()?;
+    let line = read_line()?.to_ascii_uppercase();
     if line.len() != 5 {
         return Err(ErrorT::from(format!("invalid input length: {}", line)));
     }
-    line.make_ascii_lowercase();
     if let Some(w) = words.as_ref() {
         if w.contains(&line) {
             Ok(line)
