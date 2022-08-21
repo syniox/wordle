@@ -1,4 +1,7 @@
 use console;
+use rand;
+use rand::{SeedableRng, prelude::SliceRandom};
+use std::collections::HashSet;
 use std::{
     io::{self, Write},
 };
@@ -13,6 +16,26 @@ mod game;
 use game::{Game, Stats};
 
 mod builtin_words;
+
+// return final_words_list, final_words, valid_words
+fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<String>){
+    let mut final_words_list:Vec<String> = if args.fset.is_none() {
+        utils::from_arr(builtin_words::FINAL)
+    } else {
+        unimplemented!();
+    };
+    let final_words = final_words_list.iter().map(|x| x.clone()).collect();
+    let valid_words = if args.aset.is_none() {
+        utils::from_arr(builtin_words::ACCEPTABLE)
+    } else {
+        unimplemented!();
+    };
+    if args.random {
+        let mut rng = rand::rngs::StdRng::seed_from_u64(args.seed.unwrap());
+        final_words_list.shuffle(&mut rng);
+    }
+    (final_words_list, final_words, valid_words)
+}
 
 /// The main function for the tty game
 fn main_tty(args: args::Args) -> Result<(), utils::ErrorT> {
@@ -32,25 +55,17 @@ fn main_tty(args: args::Args) -> Result<(), utils::ErrorT> {
 
 /// The main function for the tests
 fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
-    let valid_words = if args.aset.is_none() {
-        utils::arr2set(builtin_words::ACCEPTABLE)
-    } else {
-        unimplemented!();
-    };
-    let final_words = if args.fset.is_none() {
-        utils::arr2set(builtin_words::FINAL)
-    } else {
-        unimplemented!();
-    };
-
+    let (final_words_list, final_words, valid_words) = load_word_list(&args);
     let mut stats = Stats::new();
 
-    loop {
+    for day in args.day.unwrap()-1.. {
         let mut game = Game::new();
         let answer = if let Some(w) = args.word.as_ref() {
             w.clone()
-        } else {
+        } else if !args.random {
             utils::read_word(Some(&final_words))?
+        } else {
+            final_words_list[day as usize].to_string()
         };
         game.set_answer(answer);
 
@@ -94,9 +109,9 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
 /// The main function for the Wordle game, implement your own logic here
 fn main() -> Result<(), utils::ErrorT> {
     let is_tty = atty::is(atty::Stream::Stdout);
-    let args = Args::parse();
+    let mut args = Args::parse();
     //println!("{:?}",args);
-    //args.refine();
+    args.refine();
 
     if is_tty{
         main_tty(args)

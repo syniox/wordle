@@ -20,12 +20,12 @@ pub struct Args{
     pub stats: bool,
 
     /// Specify starting day
-    #[clap(short, long, value_parser, default_value_t = 1)]
-    pub day: i32,
+    #[clap(short, long, value_parser)]
+    pub day: Option<i32>,
 
     /// Specify random seed
-    #[clap(short, long, value_parser, default_value_t = 0)]
-    pub seed: i32, // TODO i32?
+    #[clap(short, long, value_parser)]
+    pub seed: Option<u64>,
 
     /// Specify final set
     #[clap(short, long = "final-set", value_parser)]
@@ -42,4 +42,19 @@ pub struct Args{
     /// Specify config file
     #[clap(short, long, value_parser)]
     pub config: Option<String>
+}
+
+impl Args{
+    pub fn refine(&mut self) {
+        if self.seed.is_some() || self.day.is_some() {
+            self.random = true;
+        }
+        if self.random {
+            self.day = self.day.or(Some(1));
+            self.seed = self.seed.or(Some(0));
+        }
+        if self.random && self.word.is_some() {
+            panic!("-w cannot be used in random mode");
+        }
+    }
 }

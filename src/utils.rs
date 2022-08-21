@@ -33,6 +33,7 @@ pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
     }
 }
 
-pub fn arr2set(arr: &[&str]) -> HashSet<String> {
+// pub fn arr2set(arr: &[&str]) -> HashSet<String> {
+ pub fn from_arr<T:std::iter::FromIterator<String>>(arr: &[&str]) -> T {
     arr.iter().map(|x| x.to_string()).collect()
 }
