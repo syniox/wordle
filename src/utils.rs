@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, fs};
 use std::collections::HashSet;
 
 pub const ROUNDS: i32 = 6;
@@ -26,7 +26,7 @@ pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
         if w.contains(&line) {
             Ok(line)
         } else {
-            Err(ErrorT::from(format!("invalid input word: {}", line)))
+            Err(ErrorT::from(format!("invalid input word")))
         }
     } else{
         Ok(line)
@@ -34,6 +34,12 @@ pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
 }
 
 // pub fn arr2set(arr: &[&str]) -> HashSet<String> {
- pub fn from_arr<T:std::iter::FromIterator<String>>(arr: &[&str]) -> T {
+pub fn from_arr<T: std::iter::FromIterator<String>>(arr: &[&str]) -> T {
     arr.iter().map(|x| x.to_string()).collect()
+}
+
+pub fn read_from_file<T: std::iter::FromIterator<String>>(file: &str) -> T {
+    let content = fs::read_to_string(file)
+        .expect(format!("cannot read file {}", file).as_str());
+    content.split_whitespace().map(|x| x.to_string()).collect()
 }

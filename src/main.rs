@@ -19,17 +19,18 @@ mod builtin_words;
 
 // return final_words_list, final_words, valid_words
 fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<String>){
-    let mut final_words_list:Vec<String> = if args.fset.is_none() {
-        utils::from_arr(builtin_words::FINAL)
-    } else {
-        unimplemented!();
+    let mut final_words_list: Vec<String> = match args.fset.as_ref() {
+        None => utils::from_arr(builtin_words::FINAL),
+        Some(f) => utils::read_from_file(f)
     };
     let final_words = final_words_list.iter().map(|x| x.clone()).collect();
-    let valid_words = if args.aset.is_none() {
-        utils::from_arr(builtin_words::ACCEPTABLE)
-    } else {
-        unimplemented!();
+    let valid_words: HashSet<String> = match args.aset.as_ref() {
+        None => utils::from_arr(builtin_words::ACCEPTABLE),
+        Some(f) => utils::read_from_file(f)
     };
+    for word in final_words_list.iter() {
+        assert!(valid_words.contains(word));
+    }
     if args.random {
         let mut rng = rand::rngs::StdRng::seed_from_u64(args.seed.unwrap());
         final_words_list.shuffle(&mut rng);
@@ -63,6 +64,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
         let answer = if let Some(w) = args.word.as_ref() {
             w.clone()
         } else if !args.random {
+            //TODO check whether the word is valid
             utils::read_word(Some(&final_words))?
         } else {
             final_words_list[day as usize].to_string()

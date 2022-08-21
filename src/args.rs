@@ -49,10 +49,8 @@ impl Args{
         if self.seed.is_some() || self.day.is_some() {
             self.random = true;
         }
-        if self.random {
-            self.day = self.day.or(Some(1));
-            self.seed = self.seed.or(Some(0));
-        }
+        self.day = self.day.or(Some(1));
+        self.seed = self.seed.or(Some(0));
         if self.random && self.word.is_some() {
             panic!("-w cannot be used in random mode");
         }
