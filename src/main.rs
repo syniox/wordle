@@ -19,13 +19,13 @@ mod builtin_words;
 
 // return final_words_list, final_words, valid_words
 fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<String>){
-    let mut final_words_list: Vec<String> = match args.fset.as_ref() {
+    let mut final_words_list: Vec<String> = match args.final_set.as_ref() {
         None => utils::from_arr(builtin_words::FINAL),
         Some(f) => utils::arr_from_file(f)
     };
     final_words_list.iter_mut().for_each(|x| x.make_ascii_uppercase());
     let final_words: HashSet<String> = final_words_list.iter().map(|x| x.clone()).collect();
-    let mut valid_words_list: Vec<String> = match args.aset.as_ref() {
+    let mut valid_words_list: Vec<String> = match args.acceptable_set.as_ref() {
         None => utils::from_arr(builtin_words::ACCEPTABLE),
         Some(f) => utils::arr_from_file(f)
     };
@@ -81,7 +81,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
         for round in 0..utils::ROUNDS {
             let word = loop {
                 if let Ok(word) = utils::read_word(Some(&valid_words)){
-                    if !args.hard || game.hard_check(&word) {
+                    if !args.difficult || game.hard_check(&word) {
                         break word;
                     }
                 }
@@ -119,15 +119,14 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
 
 /// The main function for the Wordle game, implement your own logic here
 fn main() -> Result<(), utils::ErrorT> {
-    //let is_tty = atty::is(atty::Stream::Stdout);
+    let is_tty = atty::is(atty::Stream::Stdout);
     let mut args = Args::parse();
     //println!("{:?}",args);
     args.refine();
 
-    main_tst(args)
-    /*if is_tty{
+    if is_tty{
         main_tty(args)
     } else {
         main_tst(args)
-    }*/
+    }
 }
