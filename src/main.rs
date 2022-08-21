@@ -68,7 +68,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
     for day in args.day.unwrap()-1.. {
         let mut game = Game::new();
         let answer = if let Some(w) = args.word.as_ref() {
-            w.to_ascii_uppercase()
+            w.clone()
         } else if !args.random {
             //TODO check whether the word is valid
             utils::read_word(Some(&final_words))?

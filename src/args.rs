@@ -46,6 +46,9 @@ pub struct Args{
 
 impl Args{
     pub fn refine(&mut self) {
+        if let Some(w) = self.word.as_ref() {
+            self.word = Some(w.to_ascii_uppercase());
+        }
         if self.seed.is_some() || self.day.is_some() {
             self.random = true;
         }
