@@ -1,20 +1,21 @@
 use std::{fmt, cmp, iter::zip, collections::HashMap};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 use crate::{
-    utils::apmax,
-    args::Args
+    utils::apmax
 };
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct State {
     answer: String,
     guesses: Vec<String>
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Stats {
+    #[serde(default)]
     total_rounds: i32,
+    #[serde(default)]
     games: Vec<State>
 }
 

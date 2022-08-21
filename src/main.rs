@@ -21,12 +21,12 @@ mod builtin_words;
 fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<String>){
     let mut final_words_list: Vec<String> = match args.fset.as_ref() {
         None => utils::from_arr(builtin_words::FINAL),
-        Some(f) => utils::read_from_file(f)
+        Some(f) => utils::arr_from_file(f)
     };
     let final_words = final_words_list.iter().map(|x| x.clone()).collect();
     let valid_words: HashSet<String> = match args.aset.as_ref() {
         None => utils::from_arr(builtin_words::ACCEPTABLE),
-        Some(f) => utils::read_from_file(f)
+        Some(f) => utils::arr_from_file(f)
     };
     for word in final_words_list.iter() {
         assert!(valid_words.contains(word));
@@ -57,7 +57,10 @@ fn main_tty(args: args::Args) -> Result<(), utils::ErrorT> {
 /// The main function for the tests
 fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
     let (final_words_list, final_words, valid_words) = load_word_list(&args);
-    let mut stats = Stats::new();
+    let mut stats = match args.state.as_ref() {
+        None => Stats::new(),
+        Some(f) => serde_json::from_str(&utils::str_from_file(f))?
+    };
 
     for day in args.day.unwrap()-1.. {
         let mut game = Game::new();
@@ -105,19 +108,23 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
             break;
         }
     }
+    if let Some(file) = args.state {
+        utils::str_to_file(serde_json::to_string_pretty(&stats)?.as_str(), &file);
+    }
     Ok(())
 }
 
 /// The main function for the Wordle game, implement your own logic here
 fn main() -> Result<(), utils::ErrorT> {
-    let is_tty = atty::is(atty::Stream::Stdout);
+    //let is_tty = atty::is(atty::Stream::Stdout);
     let mut args = Args::parse();
     //println!("{:?}",args);
     args.refine();
 
-    if is_tty{
+    main_tst(args)
+    /*if is_tty{
         main_tty(args)
     } else {
         main_tst(args)
-    }
+    }*/
 }

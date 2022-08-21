@@ -38,8 +38,12 @@ pub fn from_arr<T: std::iter::FromIterator<String>>(arr: &[&str]) -> T {
     arr.iter().map(|x| x.to_string()).collect()
 }
 
-pub fn read_from_file<T: std::iter::FromIterator<String>>(file: &str) -> T {
-    let content = fs::read_to_string(file)
-        .expect(format!("cannot read file {}", file).as_str());
-    content.split_whitespace().map(|x| x.to_string()).collect()
+pub fn str_to_file(s: &str, file: &str) {
+    fs::write(file, format!("{}\n",s)).unwrap();
+}
+pub fn str_from_file(file: &str) -> String {
+    fs::read_to_string(file).expect(format!("cannot read file {}", file).as_str())
+}
+pub fn arr_from_file<T: std::iter::FromIterator<String>>(file: &str) -> T {
+    str_from_file(file).split_whitespace().map(|x| x.to_string()).collect()
 }

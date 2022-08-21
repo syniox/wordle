@@ -35,9 +35,9 @@ pub struct Args{
     #[clap(short, long = "acceptable-set", value_parser)]
     pub aset: Option<String>,
 
-    /// Store game state
+    /// store and load game state using file <state>
     #[clap(short = 'S', long, value_parser)]
-    pub state: bool,
+    pub state: Option<String>,
 
     /// Specify config file
     #[clap(short, long, value_parser)]
