@@ -48,11 +48,11 @@ fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -
                 break w
             } else {
                 if args.tty {
-                    println!("Please type a word according to the information you've got.")
+                    utils::warn("Please type a word according to the information you've got.");
                 } else { println!("INVALID") }
             },
             Err(e) => if args.tty {
-                println!("{}, please type a correct word with 5 characters.",e)
+                utils::warn(&format!("{}, please type a correct 5-character word.",e));
             } else { println!("INVALID") }
         };
     }
@@ -72,7 +72,7 @@ fn main() -> Result<(), utils::ErrorT> {
         Some(f) => serde_json::from_str(&utils::str_from_file(f))?
     };
     if args.tty {
-        println!("{}", console::style("Welcome to wordle!").blink().blue());
+        println!("Welcome to {}!", console::style("wordle").blink().blue());
     }
 
     for day in args.day.unwrap() - 1.. {
@@ -83,8 +83,7 @@ fn main() -> Result<(), utils::ErrorT> {
         } else if !args.random {
             //TODO check whether the word is valid
             if args.tty {
-                println!("{}", console::style(
-                    "You aren't using random mode. Please type answer first.").red());
+                utils::warn("You aren't using random mode. Please type answer first.");
                 read_word_hinted(&args, &game, Some(&final_words))
             } else {
                 utils::read_word(Some(&final_words))?
@@ -93,7 +92,9 @@ fn main() -> Result<(), utils::ErrorT> {
             final_words_list[day as usize].to_string()
         };
         game.set_answer(answer);
-
+        if args.tty {
+            println!("Now, please guess the 5-character word!");
+        }
         let mut win = false;
         for round in 0..utils::ROUNDS {
             let word = read_word_hinted(&args, &game, Some(&valid_words));

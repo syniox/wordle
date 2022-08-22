@@ -61,7 +61,7 @@ impl Stats {
                 map.entry(guess.as_str()).and_modify(|x| *x += 1).or_insert(1);
             }
         }
-        let fail_rounds = self.total_rounds - win_rounds;
+        let lose_rounds = self.total_rounds - win_rounds;
         let avg_guesses = if win_rounds == 0 { 0f64 } else {
             win_guesses as f64 / win_rounds as f64
         };
@@ -71,8 +71,8 @@ impl Stats {
         w_list.reverse();
         if is_tty{
             let win_colored = console::style(format!("Win: {}",win_rounds)).green();
-            let fail_colored = console::style(format!("Win: {}",fail_rounds)).red();
-            println!("{}, {}, Avg guesses: {:.2}", win_colored, fail_colored, avg_guesses);
+            let lose_colored = console::style(format!("Lose: {}",lose_rounds)).red();
+            println!("{}, {}, Avg guesses: {:.2}", win_colored, lose_colored, avg_guesses);
             println!("Used most:");
             for (i, w) in w_list.iter().enumerate() {
                 if i == 5 { break; }
@@ -81,7 +81,7 @@ impl Stats {
             }
         } else{
             // TODO: use prettier oput
-            println!("{} {} {:.2}", win_rounds, fail_rounds, avg_guesses);
+            println!("{} {} {:.2}", win_rounds, lose_rounds, avg_guesses);
             for (i, w) in w_list.iter().enumerate() {
                 if i == 5 { break; }
                 if i != 0 { print!(" "); }
