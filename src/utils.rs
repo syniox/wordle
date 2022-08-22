@@ -2,11 +2,23 @@ use std::{io, fs};
 use std::collections::HashSet;
 
 pub const ROUNDS: i32 = 6;
+pub const LEN: usize = 5;
 
 pub type ErrorT = Box<dyn std::error::Error>;
 
 pub fn apmax<T: Copy + std::cmp::Ord>(a: &mut T, b: T) {
     if *a < b { *a = b; }
+}
+
+pub fn colorize_id(id: i8) -> console::Style {
+    use console::Style;
+    match id {
+        0 => Style::new().black(),
+        1 => Style::new().red(),
+        2 => Style::new().yellow(),
+        3 => Style::new().green(),
+        _ => unreachable!()
+    }
 }
 
 pub fn read_line() -> Result<String, ErrorT> {
@@ -18,14 +30,14 @@ pub fn read_line() -> Result<String, ErrorT> {
 
 pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
     let line = read_line()?.to_ascii_uppercase();
-    if line.len() != 5 {
-        return Err(ErrorT::from(format!("invalid input length: {}", line)));
+    if line.len() != LEN {
+        return Err(ErrorT::from(format!("the length of {} isn't {}", line, LEN)));
     }
     if let Some(w) = words.as_ref() {
         if w.contains(&line) {
             Ok(line)
         } else {
-            Err(ErrorT::from(format!("invalid input word")))
+            Err(ErrorT::from(format!("{} isn't a correct word", line)))
         }
     } else{
         Ok(line)

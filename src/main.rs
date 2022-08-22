@@ -41,19 +41,73 @@ fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<S
     (final_words_list, final_words, valid_words)
 }
 
+fn word_from_tty(args: &Args, game: &Game, words: Option<&HashSet<String>>) -> String {
+    loop {
+        match utils::read_word(words){
+            Ok(w) => if !args.difficult || game.hard_check(&w) { break w },
+            Err(e) => println!("{}, please type a correct word with 5 characters.",e)
+        };
+    }
+}
+
 /// The main function for the tty game
-fn main_tty(args: args::Args) -> Result<(), utils::ErrorT> {
-    println!(
-        "I am in a tty. Please print {}!",
-        console::style("colorful characters").bold().blink().blue()
-    );
+fn main_tty(args: Args) -> Result<(), utils::ErrorT> {
+    let (final_words_list, final_words, valid_words) = load_word_list(&args);
+    let mut stats = match args.state.as_ref() {
+        None => Stats::new(),
+        Some(f) => serde_json::from_str(&utils::str_from_file(f))?
+    };
 
-    print!("{}", console::style("Your name: ").bold().red());
-    io::stdout().flush().unwrap();
+    println!("{}", console::style("Welcome to wordle!").blink().blue());
 
-    let line = utils::read_line()?;
-    println!("Welcome to wordle, {}!", line.trim());
+    for day in args.day.unwrap() - 1.. {
+        let mut game = Game::new();
+        let answer = if let Some(w) = args.word.as_ref() {
+            w.clone()
+        } else if !args.random {
+            //TODO check whether the word is valid
+            println!("{}", console::style(
+                "You aren't using random mode. Please type answer first.").red());
+            word_from_tty(&args, &game, Some(&final_words))
+        } else {
+            final_words_list[day as usize].to_string()
+        };
+        game.set_answer(answer);
 
+        let mut win = false;
+        for round in 0..utils::ROUNDS {
+            let word = word_from_tty(&args, &game, Some(&valid_words));
+            win = game.guess(word.clone());
+            // output colorized results
+            let (col_pos, col_alpha) = game.show_col();
+            for (i, c) in word.chars().enumerate() {
+                print!("{}", utils::colorize_id(col_pos[i]).apply_to(c));
+            }
+            print!(" ");
+            for(i, c) in ('A'..='Z').enumerate() {
+                print!("{}", utils::colorize_id(col_alpha[i]).apply_to(c));
+            }
+            println!("");
+            io::stdout().flush()?;
+            if win {
+                println!("Congratulations! You made it with {} {}.",
+                    round+1, if round == 0 { "guess" } else { "guesses" });
+                break;
+            }
+        }
+        if !win {
+            println!("Sorry, but the correct answer is {}", game.show_answer());
+        }
+        if args.stats {
+
+        }
+        if args.word.is_none() {
+
+        }
+    }
+    if let Some(file) = args.state {
+        utils::str_to_file(serde_json::to_string_pretty(&stats)?.as_str(), &file);
+    }
     Ok(())
 }
 
@@ -65,7 +119,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
         Some(f) => serde_json::from_str(&utils::str_from_file(f))?
     };
 
-    for day in args.day.unwrap()-1.. {
+    for day in args.day.unwrap() - 1.. {
         let mut game = Game::new();
         let answer = if let Some(w) = args.word.as_ref() {
             w.clone()
@@ -95,7 +149,7 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
             }
         }
         if !win {
-            println!("FAILED {}", game.show_answer().to_ascii_uppercase());
+            println!("FAILED {}", game.show_answer());
         }
         if args.stats {
             stats.store_game(game);
@@ -121,7 +175,6 @@ fn main_tst(args: args::Args) -> Result<(), utils::ErrorT> {
 fn main() -> Result<(), utils::ErrorT> {
     let is_tty = atty::is(atty::Stream::Stdout);
     let mut args = Args::parse();
-    //println!("{:?}",args);
     args.refine();
 
     if is_tty{
