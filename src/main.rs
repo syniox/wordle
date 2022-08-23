@@ -142,7 +142,7 @@ fn main() -> Result<(), utils::ErrorT> {
                 line = utils::read_line()?;
             }
             let line = line;
-            if line == "N" || line == "Y" || line == "" {
+            if line != "N" && line != "Y" && line != "" {
                 panic!("should we continue?");
             }
             if line == "N" {
