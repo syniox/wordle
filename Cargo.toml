@@ -18,3 +18,8 @@ lazy_static = "1.0"
 assert-json-diff = "2.0"
 ntest = "0.8"
 pretty_assertions = "1.2.1"
+
+#[[bin]]
+#name = "tui"
+#path = "src/main.rs"
+

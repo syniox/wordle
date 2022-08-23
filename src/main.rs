@@ -1,9 +1,8 @@
 use console;
-use rand;
 use rand::{SeedableRng, prelude::SliceRandom};
-use std::collections::HashSet;
 use std::{
     io::{self, Write},
+    collections::HashSet
 };
 
 mod args;
