@@ -4,7 +4,7 @@ use yew::{
     Properties, html, Callback, Component, Context, Html,
     NodeRef
 };
-//use wasm_bindgen::JsCast;
+use wasm_bindgen::JsCast;
 //use wasm_bindgen::closure::Closure;
 //use wasm_bindgen::UnwrapThrowExt;
 extern crate web_sys;
@@ -59,13 +59,33 @@ impl App {
     fn get_focus_ref(&self) -> NodeRef {
         self.board[self.focus.0][self.focus.1].clone()
     }
+    fn get_elm((a, b): (usize, usize)) -> HtmlInputElement {
+        let window = web_sys::window().expect("should have a window in this context");
+        let document = window.document().expect("window should have a document");
+        document.query_selector(&format!("#tile-{}{}", a, b))
+            .unwrap().unwrap()
+            .dyn_into::<HtmlInputElement>().unwrap()
+    }
+    fn get_focus_elm(&self) -> HtmlInputElement {
+        //log::info!("get focus elm: {:?}", self.focus);
+        //self.get_focus_ref().cast::<HtmlInputElement>()
+        Self::get_elm(self.focus)
+    }
     fn apply_focus(&self){
-        if let Some(input) = self.get_focus_ref().cast::<HtmlInputElement>() {
-            input.focus().expect(&format!("focus_next error: {:?}", self.focus));
-        }
+        /*if let Some(input) = self.get_focus_elm() {
+            log::info!("try to focus on {:?}", self.focus);
+            match input.focus(){
+                Ok(_) => (),
+                Err(e) => log::error!("Error: {:?}", e)
+            }//.expect(&format!("focus_next error: {:?}", self.focus));
+        } else {
+            panic!("cannot get focused elm");
+        }*/
+        let elm = self.get_focus_elm();
+        elm.focus().unwrap();
     }
     fn focus_next(&mut self, enter: bool) {
-        if self.focus.1 < utils::ROUNDS - 1 {
+        if self.focus.1 < utils::LEN - 1 {
             self.focus.1 += 1;
         } else if enter == true {
             self.focus.1 = 0;
@@ -74,42 +94,56 @@ impl App {
                 return;
             }
         }
-        self.apply_focus();
+        //self.apply_focus();
     }
     fn focus_prev(&mut self) {
         if self.focus.1 > 0 {
             self.focus.1 -= 1;
-            self.apply_focus();
+            //self.apply_focus();
         }
     }
 
     pub fn backspace(&mut self){
-        let node = self.board[self.focus.0][self.focus.1].get().unwrap();
+        //let mut elm = self.get_focus_elm().unwrap();
+        let mut elm = self.get_focus_elm();
         log::info!("backspace on {:?}", self.focus);
-        log::info!("node_value:{}", node.node_value().unwrap_or(String::from("None")));
-        if node.node_value().is_none(){
+        log::info!("node_value:{}", elm.value());
+        if elm.value().is_empty() {
             self.focus_prev();
+            //elm = self.get_focus_elm().unwrap();
+            elm = self.get_focus_elm();
         }
         if self.focus != (0, 0) {
-            assert!(!node.node_value().unwrap().is_empty());
+            assert!(!elm.value().is_empty());
         }
-        node.set_node_value(Some(""));
+        elm.set_value("");
     }
     pub fn linebreak(&mut self){
-        if self.focus.1 != utils::ROUNDS - 1 {
+        if self.focus.1 != utils::LEN - 1 {
             return;
         }
-        let guess = self.board[self.focus.0].iter()
+        if self.get_focus_elm().value().is_empty() {
+            return;
+        }
+        /* let guess = self.board[self.focus.0].iter()
             .map(|x| {
                 let node = x.get().unwrap();
                 assert!(node.node_value().unwrap().len() == 1);
                 node.node_value().unwrap().pop().unwrap()
             })
-            .collect::<String>();
-        // TODO: connect with game
+            .collect::<String>();*/
+        let guess = (0..utils::LEN).map(|x| {
+            let mut elm = Self::get_elm((self.focus.0, x));
+            assert!(elm.value().len()==1);
+            elm.value().pop().unwrap()
+        }).collect::<String>();
+        log::info!("submit guess: {}", guess);
+        // TODO: connect with game and find out whether focus next
     }
-    pub fn insert(&mut self, c: char) {
-        //let node = self.get_focus_ref().get().unwrap();
+    pub fn insert(&mut self, _c: char) {
+        if self.focus.1 != utils::LEN - 1 {
+            self.focus_next(false);
+        }
     }
 }
 
@@ -143,6 +177,19 @@ impl Component for App {
         }
     }
 
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
+        if first_render {
+        }
+        //self.apply_focus();
+        let window = web_sys::window().expect("should have a window in this context");
+        let document = window.document().expect("window should have a document");
+        log::info!("trying to get tile-{}{}",self.focus.0,self.focus.1);
+        document.query_selector(&format!("#tile-{}{}",self.focus.0,self.focus.1))
+            .unwrap().unwrap()
+            .dyn_ref::<HtmlInputElement>()
+            .unwrap().focus().unwrap();
+    }
+
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg{
             Msg::Input(input, r, c) => {
@@ -169,7 +216,8 @@ impl Component for App {
             Msg::Click(c) => {
                 // TODO: backspace and enter
                 log::info!("Clicked: {}", c);
-                self.insert(c);
+                self.focus = (2, 2);
+                //self.insert(c);
             }
         }
         true
@@ -207,10 +255,10 @@ impl Component for App {
                             maxlength={1}
                             onkeydown = {onkeydown(row,col)}
                             oninput = {oninput(row, col)}
+                            id = {format!("tile-{}{}",row,col)}
                             />
                         }).collect::<Html>()
-                    }
-                    </div>
+                    } </div>
                 }).collect::<Html>()
             }
             </div>
