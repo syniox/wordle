@@ -8,3 +8,6 @@ https://developer.mozilla.org/en-US/docs/Web/API/InputEvent
 https://yew.rs/docs/concepts/html for yew html!, classes! and all the way
 
 https://zhuanlan.zhihu.com/p/104859486 for html
+
+https://blog.csdn.net/cnds123/article/details/125739434
+limiting contents in <input/>
