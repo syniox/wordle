@@ -1,7 +1,7 @@
 use std::{io, fs};
 use std::collections::HashSet;
 
-pub const ROUNDS: i32 = 6;
+pub const ROUNDS: usize = 6;
 pub const LEN: usize = 5;
 
 pub type ErrorT = Box<dyn std::error::Error>;

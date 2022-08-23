@@ -3,21 +3,22 @@ use yew::{
     function_component, classes, 
     Properties, html, Callback, Component, Context, Html
 };
-use wasm_bindgen::JsCast;
-use gloo::events::EventListener;
-use wasm_bindgen::UnwrapThrowExt;
+//use wasm_bindgen::JsCast;
+//use wasm_bindgen::closure::Closure;
+//use wasm_bindgen::UnwrapThrowExt;
 extern crate web_sys;
-use wasm_bindgen::closure::Closure;
+use yew::NodeRef;
+
+mod utils;
 
 enum Msg {
-    //Input(InputEvent),
+    Input(InputEvent),
     Press(KeyboardEvent),
     Click(char)
 }
 
 struct Comp{
-    kbd_listener: Option<EventListener>,
-    keyboard_listener: Option<Closure<dyn Fn(KeyboardEvent)>>
+    board: Vec<Vec<NodeRef>>
 }
 
 const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -66,18 +67,13 @@ impl Component for Comp {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self { kbd_listener: None }
+        Self { board: vec![vec![NodeRef::default(); utils::LEN]; utils::ROUNDS] }
     }
 
-    fn rendered(&mut self, ctx: &Context<Self>, first_renderer: bool){
+    /*fn rendered(&mut self, ctx: &Context<Self>, first_renderer: bool){
         if !first_renderer {
             return;
         }
-        let cb = ctx.link().batch_callback(|e: KeyboardEvent| { Some(Msg::Press(e)) });
-
-        let listener =
-            Closure::<dyn Fn(KeyboardEvent)>::wrap(Box::new(move |e: KeyboardEvent| cb.emit(e)));
-        self.keyboard_listener = listener
         /*
         let document = gloo::utils::document();
         let listener = EventListener::new(&document, "keydown", |event| {
@@ -87,17 +83,17 @@ impl Component for Comp {
         });
         self.kbd_listener.replace(listener);
         */
-    }
+    }*/
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg{
-            /* Msg::Input(input) => {
+            Msg::Input(input) => {
                 match input.input_type().as_str() {
                     "insertText" => log::info!("insert: {}",input.data().unwrap()),
                     "deleteContentBackward" => log::info!("Backspace"),
                     e => panic!("Unknown type: {}",e)
                 }
-            } */
+            }
             Msg::Press(event) => {
                 log::info!("Pressed: {}", event.key());
                 if event.key() == "Enter" {
@@ -111,13 +107,13 @@ impl Component for Comp {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        /*let oninput = &ctx.link().callback(|event: InputEvent| {
+        let oninput = &ctx.link().callback(|event: InputEvent| {
             Msg::Input(event)
         });
         let onkeypress = &ctx.link().callback(|event: KeyboardEvent| {
             Msg::Press(event)
         });
-        */
+        //let checkfocus = &ctx.link().callback(|e: KeyboardEvent| {});
         let keybr_r0 = keyarr2html(&KEYBOARD_0, ctx);
         let keybr_r1 = keyarr2html(&KEYBOARD_1, ctx);
         let keybr_r2 = keyarr2html(&KEYBOARD_2, ctx);
@@ -126,14 +122,11 @@ impl Component for Comp {
             <h1 style="text-align:center">
             <div class={"board"}>
             {
-                (0..6).map(|_| html! {
+                self.board.iter().enumerate().map(|(row, x)| html! {
                     <div class={"row"}>
                     {
-                        (0..5).map(|_id| html! {
-                            // TODO add readonly trait
-                            // TODO add color
-                            // <input class={classes!("tile")} maxlength={1} {onkeypress}/>
-                            <input class={classes!("tile")} maxlength={1} />
+                        x.iter().enumerate().map(|(col, x)| html! {
+                            <input class={"tile"} maxlength={1} {onkeypress} {oninput}/>
                         }).collect::<Html>()
                     }
                     </div>
