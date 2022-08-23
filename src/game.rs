@@ -49,7 +49,7 @@ impl Stats {
         self.total_rounds += 1;
         self.games.push(game.state);
     }
-    pub fn print_stats(&self) {
+    pub fn print_stats(&self, is_tty: bool) {
         let mut map = HashMap::<&str, i32>::new();
         // load stats into helper vaiables
         let (win_rounds, win_guesses) = self.games.iter()
@@ -61,19 +61,32 @@ impl Stats {
                 map.entry(guess.as_str()).and_modify(|x| *x += 1).or_insert(1);
             }
         }
+        let lose_rounds = self.total_rounds - win_rounds;
         let avg_guesses = if win_rounds == 0 { 0f64 } else {
             win_guesses as f64 / win_rounds as f64
         };
-        println!("{} {} {:.2}", win_rounds, self.total_rounds - win_rounds, avg_guesses);
         // Find words that used most
         let mut w_list: Vec<(&&str, &i32)> = map.iter().collect();
         w_list.sort_by(|(&s1, &i1), (&s2, &i2)| Self::stat_cmp((s1, &i1), (s2, &i2)));
         w_list.reverse();
-        // TODO: use prettier oput
-        for (i, w) in w_list.iter().enumerate() {
-            if i == 5 { break; }
-            if i != 0 { print!(" "); }
-            print!("{} {}", w.0.to_ascii_uppercase(), w.1);
+        if is_tty{
+            let win_colored = console::style(format!("Win: {}",win_rounds)).green();
+            let lose_colored = console::style(format!("Lose: {}",lose_rounds)).red();
+            println!("{}, {}, Avg guesses: {:.2}", win_colored, lose_colored, avg_guesses);
+            println!("Used most:");
+            for (i, w) in w_list.iter().enumerate() {
+                if i == 5 { break; }
+                if i != 0 { print!(" "); }
+                print!("{} ({} time(s))", w.0, w.1);
+            }
+        } else{
+            // TODO: use prettier oput
+            println!("{} {} {:.2}", win_rounds, lose_rounds, avg_guesses);
+            for (i, w) in w_list.iter().enumerate() {
+                if i == 5 { break; }
+                if i != 0 { print!(" "); }
+                print!("{} {}", w.0, w.1);
+            }
         }
         println!("");
     }

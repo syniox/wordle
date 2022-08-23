@@ -5,6 +5,12 @@ use crate::utils::str_from_file;
 #[derive(Parser, Debug, Deserialize)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args{
+    /// whether using tty
+    /// should not be parsed by serde
+    #[clap(skip)]
+    #[serde(default)]
+    pub tty: bool,
+
     /// Specify the word to guess
     #[clap(short, long, value_parser)]
     #[serde(default)]
