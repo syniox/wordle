@@ -2,7 +2,7 @@ use clap::Parser;
 use serde::Deserialize;
 use crate::utils::str_from_file;
 
-#[derive(Parser, Debug, Deserialize)]
+#[derive(Default, Parser, Debug, Deserialize)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args{
     /// whether using tty

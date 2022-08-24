@@ -135,7 +135,6 @@ impl Game{
     pub fn show_col(&self) -> (&Vec<i8>, &Vec<i8>) {
         (&self.col_pos, &self.col_alpha)
     }
-
     pub fn hard_check(&self, guess: &str) -> bool {
         let mut cnt_alpha = vec![0i8; 26];
         // ensure user uses all green state

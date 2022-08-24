@@ -1,3 +1,4 @@
+use std::default::Default;
 use yew::{
     events::{ InputEvent, KeyboardEvent, MouseEvent },
     function_component, classes, 
@@ -14,10 +15,11 @@ mod utils;
 mod game;
 use game::{Game,Stats};
 
-/*
+mod words;
+mod builtin_words;
+
 mod args;
 use args::Args;
-*/
 
 enum Msg {
     Input(InputEvent, usize, usize), // row, col
@@ -25,10 +27,13 @@ enum Msg {
     Click(char),
 }
 
+// TODO Set the answer of game
 struct App{
     game: Game,
+    args: Args,
     col_brd: Vec<Vec<i8>>,
     col_alpha: Vec<i8>,
+    words: words::Words,
     board: Vec<Vec<NodeRef>>,
     focus: (usize, usize)
 }
@@ -74,7 +79,7 @@ impl App {
         //Self::get_elm(self.focus)
     }
     fn apply_focus(&self){
-        log::info!("apply focus to {:?}", self.focus);
+        //log::info!("apply focus to {:?}", self.focus);
         let elm = self.get_focus_elm();
         elm.focus().unwrap();
     }
@@ -95,6 +100,29 @@ impl App {
         }
     }
 
+    pub fn start(&mut self) {
+        if let Some(w) = self.args.word.as_ref() {
+            log::info!("answer copied from {}", w);
+            self.game.set_answer(w.clone());
+        } else {
+            let d = match self.args.day {
+                None => {
+                    log::warn!("day not initialized, initialize to 1");
+                    1
+                }
+                Some(d) => d
+            };
+            let answer = self.words.final_list[d as usize].clone();
+            self.game.set_answer(answer);
+            self.args.day = Some(d + 1);
+        }
+        log::info!("game start: answer {}", self.game.show_answer());
+    }
+    pub fn insert(&mut self, _c: char) {
+        if self.focus.1 != utils::LEN - 1 {
+            self.focus_next(false);
+        }
+    }
     pub fn backspace(&mut self){
         let mut elm = self.get_focus_elm();
         log::info!("backspace on {:?}", self.focus);
@@ -120,13 +148,29 @@ impl App {
                 let node = x.cast::<HtmlInputElement>().unwrap();
                 assert!(node.value().len() == 1);
                 node.value().pop().unwrap()
-            }).collect::<String>();
+            }).collect::<String>().to_ascii_uppercase();
         log::info!("submit guess: {}", guess);
         // TODO: connect with game and find out whether focus next
-    }
-    pub fn insert(&mut self, _c: char) {
-        if self.focus.1 != utils::LEN - 1 {
-            self.focus_next(false);
+        if !self.words.valid.contains(&guess) {
+            log::warn!("invalid words: {}", guess);
+            return;
+        }
+        if self.args.difficult && self.game.hard_check(&guess) {
+            log::warn!("must use information revealed before");
+            return;
+        }
+        let win = self.game.guess(guess);
+        // colorize
+        let (col_pos, col_alpha) = self.game.show_col();
+        log::info!("color: {:?}", col_pos);
+        self.col_brd[self.focus.0] = col_pos.clone();
+        self.col_alpha = col_alpha.clone();
+        // post-process
+        self.focus_next(true);
+        if win{
+            log::info!("you win!");
+        } else {
+            
         }
     }
 }
@@ -154,15 +198,20 @@ impl Component for App {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self {
+        let args = Default::default();
+        let mut app = Self {
             game: Game::new(),
             board: (0..utils::ROUNDS).map(|_| {
                 (0..utils::LEN).map(|_| NodeRef::default()).collect()
             }).collect(),
+            words: words::Words::new(&args),
+            args: args,
             col_brd: vec![vec![0i8; utils::LEN]; utils::ROUNDS],
             col_alpha: vec![0i8; 26],
             focus: (0, 0)
-        }
+        };
+        app.start();
+        app
     }
 
     fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
@@ -186,11 +235,12 @@ impl Component for App {
                 }
             }
             Msg::Press(event, r, c) => {
-                log::info!("Pressed: {}", event.key());
                 if event.key() == "Enter" {
+                    log::info!("Pressed: {}", event.key());
                     self.linebreak();
                 }
                 if event.key() == "Backspace" {
+                    log::info!("Pressed: {}", event.key());
                     self.backspace();
                 }
             }
