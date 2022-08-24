@@ -52,7 +52,7 @@ fn id2background(id: i8) -> &'static str {
 #[derive(Properties, PartialEq)]
 pub struct KeybrButtonProps {
     pub onclick: Callback<MouseEvent>,
-    pub character: char, // needed key_col
+    pub character: String, // needed key_col
     pub key_col: &'static str
 }
 
@@ -62,7 +62,7 @@ pub fn keybr_button(props: &KeybrButtonProps) -> Html {
         <button class={"keybr-button"} onclick={&props.onclick}
         style={format!("background: {}", props.key_col)}>
         {
-            props.character
+            &props.character
         }
         </button>
     }
@@ -179,16 +179,14 @@ impl App {
 fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Context<T>)
     -> Html where <T as yew::Component>::Message: From <Msg> {
     html! {
-        <div class={classes!("keybr_row")}>
         {
             arr.iter().map(|c| html! {
-                <KeybrButton character={*c}
+                <KeybrButton character={c.to_string()}
                     onclick={ &ctx.link().callback(|_: MouseEvent| Msg::Click(*c)) }
                     key_col = {id2background(col[*c as usize - 'A' as usize])}
                     />
             }).collect::<Html>()
         }
-        </div>
     }
 }
 
@@ -247,12 +245,17 @@ impl Component for App {
                 }
             }
             Msg::Click(c) => {
-                // TODO: backspace and enter
                 log::info!("Clicked: {}", c);
-                let elm = self.get_focus_elm();
-                assert!(elm.value().is_empty());
-                elm.set_value(&c.to_string());
-                self.insert(c);
+                if c == '\x08' {
+                    self.backspace();
+                } else if c == '\n' {
+                    self.linebreak();
+                } else {
+                    let elm = self.get_focus_elm();
+                    assert!(elm.value().is_empty());
+                    elm.set_value(&c.to_string());
+                    self.insert(c);
+                }
             }
         }
         true
@@ -273,6 +276,9 @@ impl Component for App {
                 event.prevent_default();
             }
             Msg::Press(event, row, col)
+        })};
+        let onclick = |c| {ctx.link().callback(move |e: MouseEvent| {
+            Msg::Click(c)
         })};
         let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
         let keybr_r1 = keyarr2html(&KEYBOARD_1, &self.col_alpha, ctx);
@@ -303,9 +309,17 @@ impl Component for App {
             }
             </div>
             // Keyboard
-            <p>{ keybr_r0 }</p>
-            <p>{ keybr_r1 }</p>
-            <p>{ keybr_r2 }</p>
+            <div class={classes!("keybr_row")}>
+            { keybr_r0 }
+            </div>
+            <div class={classes!("keybr_row")}>
+            { keybr_r1 }
+            </div>
+            <div class={classes!("keybr_row")}>
+            <KeybrButton character="Enter" onclick={onclick('\n')} key_col={"grep"}/>
+            { keybr_r2 }
+            <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
+            </div>
             </h1>
         }
     }
