@@ -31,6 +31,7 @@ enum Msg {
 struct App{
     game: Game,
     args: Args,
+    stats: Stats,
     col_brd: Vec<Vec<i8>>,
     col_alpha: Vec<i8>,
     words: words::Words,
@@ -44,7 +45,7 @@ const KEYBOARD_2: [char; 7] = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
 fn id2background(id: i8) -> &'static str {
     match id {
-        0 => "grey", 1 => "red", 2 => "yellow", 3 => "green",
+        0 => "grep", 1 => "red", 2 => "yellow", 3 => "green",
          _ => unreachable!()
     }
 }
@@ -99,6 +100,9 @@ impl App {
             self.focus.1 -= 1;
         }
     }
+    fn postproc(&mut self){
+        self.stats.store_game(self.game.clone());
+    }
 
     pub fn start(&mut self) {
         if let Some(w) = self.args.word.as_ref() {
@@ -125,8 +129,7 @@ impl App {
     }
     pub fn backspace(&mut self){
         let mut elm = self.get_focus_elm();
-        log::info!("backspace on {:?}", self.focus);
-        log::info!("node_value:{}", elm.value());
+        log::info!("backspace on {:?}, value: {}", self.focus, elm.value());
         if elm.value().is_empty() {
             self.focus_prev();
             elm = self.get_focus_elm();
@@ -166,11 +169,13 @@ impl App {
         self.col_brd[self.focus.0] = col_pos.clone();
         self.col_alpha = col_alpha.clone();
         // post-process
-        self.focus_next(true);
-        if win{
+        if win {
             log::info!("you win!");
+            self.postproc();
+        } else if self.focus.0 == utils::ROUNDS - 1 {
+            self.postproc();
         } else {
-            
+            self.focus_next(true);
         }
     }
 }
@@ -198,9 +203,16 @@ impl Component for App {
     fn create(_ctx: &Context<Self>) -> Self {
         let mut args: args::Args = Default::default();
         args.random = true;
-        args.seed = args.seed.or(Some(0));
+        if args.seed.is_none() {
+            let mut s = [0u8];
+            if let Err(e) = getrandom::getrandom(s.as_mut_slice()) {
+                log::warn!("failed to get random seed: {}",e);
+            }
+            args.seed = Some(s[0].into());
+        }
         let mut app = Self {
             game: Game::new(),
+            stats: Default::default(),
             board: (0..utils::ROUNDS).map(|_| {
                 (0..utils::LEN).map(|_| NodeRef::default()).collect()
             }).collect(),
@@ -223,11 +235,11 @@ impl Component for App {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg{
             Msg::Input(input, r, c) => {
-                log::info!("typed on row {r} col {c}");
+                //log::info!("typed on row {r} col {c}");
                 match input.input_type().as_str() {
                     "insertText" => {
                         let mut s = input.data().unwrap();
-                        log::info!("insert: {}",s);
+                        //log::info!("insert: {}",s);
                         assert!(s.len() == 1);
                         self.insert(s.pop().unwrap());
                     }
@@ -236,11 +248,11 @@ impl Component for App {
             }
             Msg::Press(event, r, c) => {
                 if event.key() == "Enter" {
-                    log::info!("Pressed: {}", event.key());
+                    //log::info!("Pressed: {}", event.key());
                     self.linebreak();
                 }
                 if event.key() == "Backspace" {
-                    log::info!("Pressed: {}", event.key());
+                    //log::info!("Pressed: {}", event.key());
                     self.backspace();
                 }
             }
@@ -286,6 +298,7 @@ impl Component for App {
 
         html! {
             <h1 style="text-align:center">
+            // Menubar
             // Dashboard
             <div class={"board"}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {

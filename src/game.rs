@@ -5,13 +5,13 @@ use crate::{
     utils::apmax
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 struct State {
     answer: String,
     guesses: Vec<String>
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Stats {
     #[serde(default)]
     total_rounds: i32,
@@ -19,6 +19,7 @@ pub struct Stats {
     games: Vec<State>
 }
 
+#[derive(Clone)]
 pub struct Game {
     state: State,
     // 3: G, 2: Y, 1: R, 0: X
