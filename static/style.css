@@ -66,8 +66,7 @@
     align-items: center;
     flex: 1;
 
-    background-color: var(--unknown);
-    /*border: none;*/
+    border: none;
     border-radius: 3px;
     color: var(--white);
 

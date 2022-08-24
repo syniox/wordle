@@ -4,9 +4,9 @@ use yew::{
     Properties, html, Callback, Component, Context, Html,
     NodeRef
 };
-use wasm_bindgen::JsCast;
-//use wasm_bindgen::closure::Closure;
-//use wasm_bindgen::UnwrapThrowExt;
+// use wasm_bindgen::JsCast;
+// use wasm_bindgen::closure::Closure;
+// use wasm_bindgen::UnwrapThrowExt;
 extern crate web_sys;
 use web_sys::HtmlInputElement;
 
@@ -37,19 +37,26 @@ const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'
 const KEYBOARD_1: [char; 9] = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
 const KEYBOARD_2: [char; 7] = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
+fn id2background(id: i8) -> &'static str {
+    match id {
+        0 => "grey", 1 => "red", 2 => "yellow", 3 => "green",
+         _ => unreachable!()
+    }
+}
+
 #[derive(Properties, PartialEq)]
 pub struct KeybrButtonProps {
     pub onclick: Callback<MouseEvent>,
-    pub character: char // needed key_col
+    pub character: char, // needed key_col
+    pub key_col: &'static str
 }
 
 #[function_component(KeybrButton)]
 pub fn keybr_button(props: &KeybrButtonProps) -> Html {
     html! {
-        //<button style={format!("background-color:{}","yellow")}>
-        <button class={"keybr-button"} onclick={&props.onclick}>
+        <button class={"keybr-button"} onclick={&props.onclick}
+        style={format!("background: {}", props.key_col)}>
         {
-            //props.character.or(Some(' ')).unwrap()
             props.character
         }
         </button>
@@ -57,23 +64,10 @@ pub fn keybr_button(props: &KeybrButtonProps) -> Html {
 }
 
 impl App {
-    fn id2background(id: i8) -> &'static str {
-        match id {
-            0 => "grey", 1 => "red", 2 => "yellow", 3 => "green",
-             _ => unreachable!()
-        }
-    }
     // focus on the right thing
     fn get_focus_ref(&self) -> NodeRef {
         self.board[self.focus.0][self.focus.1].clone()
     }
-    /*fn get_elm((a, b): (usize, usize)) -> HtmlInputElement {
-        let window = web_sys::window().expect("should have a window in this context");
-        let document = window.document().expect("window should have a document");
-        document.query_selector(&format!("#tile-{}{}", a, b))
-            .unwrap().unwrap()
-            .dyn_into::<HtmlInputElement>().unwrap()
-    }*/
     fn get_focus_elm(&self) -> HtmlInputElement {
         //log::info!("get focus elm: {:?}", self.focus);
         self.get_focus_ref().cast::<HtmlInputElement>().unwrap()
@@ -138,16 +132,16 @@ impl App {
 }
 
 // Keyboard viewing function
-fn keyarr2html<T: yew::Component>(arr: &'static [char], ctx: &Context<T>) -> Html
-where <T as yew::Component>::Message: From <Msg> {
+fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Context<T>)
+    -> Html where <T as yew::Component>::Message: From <Msg> {
     html! {
         <div class={classes!("keybr_row")}>
         {
             arr.iter().map(|c| html! {
-                <KeybrButton character={*c} onclick={
-                    &ctx.link().callback(|_: MouseEvent| Msg::Click(*c))
-                    // Callback::from(|_: MouseEvent| callback.emit(Msg::Click(*c)))
-                }/>
+                <KeybrButton character={*c}
+                    onclick={ &ctx.link().callback(|_: MouseEvent| Msg::Click(*c)) }
+                    key_col = {id2background(col[*c as usize - 'A' as usize])}
+                    />
             }).collect::<Html>()
         }
         </div>
@@ -225,9 +219,9 @@ impl Component for App {
             }
             Msg::Press(event, row, col)
         })};
-        let keybr_r0 = keyarr2html(&KEYBOARD_0, ctx);
-        let keybr_r1 = keyarr2html(&KEYBOARD_1, ctx);
-        let keybr_r2 = keyarr2html(&KEYBOARD_2, ctx);
+        let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
+        let keybr_r1 = keyarr2html(&KEYBOARD_1, &self.col_alpha, ctx);
+        let keybr_r2 = keyarr2html(&KEYBOARD_2, &self.col_alpha, ctx);
 
         html! {
             <h1 style="text-align:center">
@@ -244,7 +238,7 @@ impl Component for App {
                             id = {format!("tile-{}{}",row,col)}
                             style = {
                                 format!("background: {};",
-                                    Self::id2background(self.col_brd[row][col])
+                                    id2background(self.col_brd[row][col])
                                 )
                             }
                             />
