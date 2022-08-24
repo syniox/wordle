@@ -198,7 +198,9 @@ impl Component for App {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let args = Default::default();
+        let mut args: args::Args = Default::default();
+        args.random = true;
+        args.seed = args.seed.or(Some(0));
         let mut app = Self {
             game: Game::new(),
             board: (0..utils::ROUNDS).map(|_| {
@@ -247,6 +249,9 @@ impl Component for App {
             Msg::Click(c) => {
                 // TODO: backspace and enter
                 log::info!("Clicked: {}", c);
+                let elm = self.get_focus_elm();
+                assert!(elm.value().is_empty());
+                elm.set_value(&c.to_string());
                 self.insert(c);
             }
         }
