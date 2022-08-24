@@ -2,7 +2,7 @@ use std::{fmt, cmp, iter::zip, collections::HashMap};
 use serde::{Serialize, Deserialize};
 
 use crate::{
-    utils::apmax
+    utils, utils::apmax
 };
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone)]
@@ -76,7 +76,7 @@ impl Stats {
             println!("{}, {}, Avg guesses: {:.2}", win_colored, lose_colored, avg_guesses);
             println!("Used most:");
             for (i, w) in w_list.iter().enumerate() {
-                if i == 5 { break; }
+                if i == utils::LEN { break; }
                 if i != 0 { print!(" "); }
                 print!("{} ({} time(s))", w.0, w.1);
             }
@@ -84,7 +84,7 @@ impl Stats {
             // TODO: use prettier oput
             println!("{} {} {:.2}", win_rounds, lose_rounds, avg_guesses);
             for (i, w) in w_list.iter().enumerate() {
-                if i == 5 { break; }
+                if i == utils::LEN { break; }
                 if i != 0 { print!(" "); }
                 print!("{} {}", w.0, w.1);
             }
@@ -120,9 +120,21 @@ impl Game{
         Game {
             state: State::new(),
             col_alpha: vec![0i8; 26],
-            col_pos: vec![0i8; 5],
+            col_pos: vec![0i8; utils::LEN],
             lim_alpha: vec![0i8; 26]
         }
+    }
+    pub fn ended(&self) -> bool {
+        let stat = &self.state;
+        match stat.guesses.len() {
+            utils::ROUNDS => true,
+            x if x > 0 => stat.guesses[stat.guesses.len() - 1] == stat.answer,
+            0 => false,
+            _ => unreachable!()
+        }
+    }
+    pub fn rounds(&self) -> usize {
+        self.state.guesses.len()
     }
     pub fn set_answer(&mut self, answer: String) {
         self.state.answer = answer;
@@ -156,7 +168,7 @@ impl Game{
     }
 
     pub fn guess(&mut self, guess: String) -> bool {
-        assert!(guess.len() == 5);
+        assert!(guess.len() == utils::LEN);
         self.state.guesses.push(guess.clone());
         let answer = self.state.answer.clone();
         let mut cnt_alpha = vec![0i8; 26];

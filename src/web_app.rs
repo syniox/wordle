@@ -77,7 +77,6 @@ impl App {
     fn get_focus_elm(&self) -> HtmlInputElement {
         //log::info!("get focus elm: {:?}", self.focus);
         self.get_focus_ref().cast::<HtmlInputElement>().unwrap()
-        //Self::get_elm(self.focus)
     }
     fn apply_focus(&self){
         //log::info!("apply focus to {:?}", self.focus);
@@ -99,6 +98,9 @@ impl App {
         if self.focus.1 > 0 {
             self.focus.1 -= 1;
         }
+    }
+    fn disabled(&self, row: usize, col: usize) -> bool {
+        return self.game.ended() || (row, col) !=self.focus;
     }
     fn postproc(&mut self){
         self.stats.store_game(self.game.clone());
@@ -129,6 +131,9 @@ impl App {
     }
     pub fn backspace(&mut self){
         let mut elm = self.get_focus_elm();
+        if self.game.ended(){
+            return;
+        }
         log::info!("backspace on {:?}, value: {}", self.focus, elm.value());
         if elm.value().is_empty() {
             self.focus_prev();
@@ -153,7 +158,6 @@ impl App {
                 node.value().pop().unwrap()
             }).collect::<String>().to_ascii_uppercase();
         log::info!("submit guess: {}", guess);
-        // TODO: connect with game and find out whether focus next
         if !self.words.valid.contains(&guess) {
             log::warn!("invalid words: {}", guess);
             return;
@@ -307,14 +311,15 @@ impl Component for App {
                             <input class={"tile"}
                             ref={self.board[row][col].clone()}
                             maxlength={1}
-                            onkeydown = {onkeydown(row,col)}
-                            oninput = {oninput(row, col)}
-                            id = {format!("tile-{}{}",row,col)}
-                            style = {
+                            onkeydown={onkeydown(row,col)}
+                            oninput={oninput(row, col)}
+                            id={format!("tile-{}{}",row,col)}
+                            style={
                                 format!("background: {};",
                                     id2background(self.col_brd[row][col])
                                 )
                             }
+                            disabled={self.disabled(row, col)}
                             />
                         }).collect::<Html>()
                     } </div>
