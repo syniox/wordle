@@ -27,6 +27,8 @@ enum Msg {
 
 struct App{
     game: Game,
+    col_brd: Vec<Vec<i8>>,
+    col_alpha: Vec<i8>,
     board: Vec<Vec<NodeRef>>,
     focus: (usize, usize)
 }
@@ -55,32 +57,30 @@ pub fn keybr_button(props: &KeybrButtonProps) -> Html {
 }
 
 impl App {
+    fn id2background(id: i8) -> &'static str {
+        match id {
+            0 => "grey", 1 => "red", 2 => "yellow", 3 => "green",
+             _ => unreachable!()
+        }
+    }
     // focus on the right thing
     fn get_focus_ref(&self) -> NodeRef {
         self.board[self.focus.0][self.focus.1].clone()
     }
-    fn get_elm((a, b): (usize, usize)) -> HtmlInputElement {
+    /*fn get_elm((a, b): (usize, usize)) -> HtmlInputElement {
         let window = web_sys::window().expect("should have a window in this context");
         let document = window.document().expect("window should have a document");
         document.query_selector(&format!("#tile-{}{}", a, b))
             .unwrap().unwrap()
             .dyn_into::<HtmlInputElement>().unwrap()
-    }
+    }*/
     fn get_focus_elm(&self) -> HtmlInputElement {
         //log::info!("get focus elm: {:?}", self.focus);
-        //self.get_focus_ref().cast::<HtmlInputElement>()
-        Self::get_elm(self.focus)
+        self.get_focus_ref().cast::<HtmlInputElement>().unwrap()
+        //Self::get_elm(self.focus)
     }
     fn apply_focus(&self){
-        /*if let Some(input) = self.get_focus_elm() {
-            log::info!("try to focus on {:?}", self.focus);
-            match input.focus(){
-                Ok(_) => (),
-                Err(e) => log::error!("Error: {:?}", e)
-            }//.expect(&format!("focus_next error: {:?}", self.focus));
-        } else {
-            panic!("cannot get focused elm");
-        }*/
+        log::info!("apply focus to {:?}", self.focus);
         let elm = self.get_focus_elm();
         elm.focus().unwrap();
     }
@@ -94,23 +94,19 @@ impl App {
                 return;
             }
         }
-        //self.apply_focus();
     }
     fn focus_prev(&mut self) {
         if self.focus.1 > 0 {
             self.focus.1 -= 1;
-            //self.apply_focus();
         }
     }
 
     pub fn backspace(&mut self){
-        //let mut elm = self.get_focus_elm().unwrap();
         let mut elm = self.get_focus_elm();
         log::info!("backspace on {:?}", self.focus);
         log::info!("node_value:{}", elm.value());
         if elm.value().is_empty() {
             self.focus_prev();
-            //elm = self.get_focus_elm().unwrap();
             elm = self.get_focus_elm();
         }
         if self.focus != (0, 0) {
@@ -125,18 +121,12 @@ impl App {
         if self.get_focus_elm().value().is_empty() {
             return;
         }
-        /* let guess = self.board[self.focus.0].iter()
+        let guess = self.board[self.focus.0].iter()
             .map(|x| {
-                let node = x.get().unwrap();
-                assert!(node.node_value().unwrap().len() == 1);
-                node.node_value().unwrap().pop().unwrap()
-            })
-            .collect::<String>();*/
-        let guess = (0..utils::LEN).map(|x| {
-            let mut elm = Self::get_elm((self.focus.0, x));
-            assert!(elm.value().len()==1);
-            elm.value().pop().unwrap()
-        }).collect::<String>();
+                let node = x.cast::<HtmlInputElement>().unwrap();
+                assert!(node.value().len() == 1);
+                node.value().pop().unwrap()
+            }).collect::<String>();
         log::info!("submit guess: {}", guess);
         // TODO: connect with game and find out whether focus next
     }
@@ -172,7 +162,11 @@ impl Component for App {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             game: Game::new(),
-            board: vec![vec![NodeRef::default(); utils::LEN]; utils::ROUNDS],
+            board: (0..utils::ROUNDS).map(|_| {
+                (0..utils::LEN).map(|_| NodeRef::default()).collect()
+            }).collect(),
+            col_brd: vec![vec![0i8; utils::LEN]; utils::ROUNDS],
+            col_alpha: vec![0i8; 26],
             focus: (0, 0)
         }
     }
@@ -180,14 +174,7 @@ impl Component for App {
     fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
         if first_render {
         }
-        //self.apply_focus();
-        let window = web_sys::window().expect("should have a window in this context");
-        let document = window.document().expect("window should have a document");
-        log::info!("trying to get tile-{}{}",self.focus.0,self.focus.1);
-        document.query_selector(&format!("#tile-{}{}",self.focus.0,self.focus.1))
-            .unwrap().unwrap()
-            .dyn_ref::<HtmlInputElement>()
-            .unwrap().focus().unwrap();
+        self.apply_focus();
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -201,7 +188,7 @@ impl Component for App {
                         assert!(s.len() == 1);
                         self.insert(s.pop().unwrap());
                     }
-                    _ => unreachable!()
+                    s => log::warn!("Unused input_type: {}", s)
                 }
             }
             Msg::Press(event, r, c) => {
@@ -216,8 +203,7 @@ impl Component for App {
             Msg::Click(c) => {
                 // TODO: backspace and enter
                 log::info!("Clicked: {}", c);
-                self.focus = (2, 2);
-                //self.insert(c);
+                self.insert(c);
             }
         }
         true
@@ -256,6 +242,11 @@ impl Component for App {
                             onkeydown = {onkeydown(row,col)}
                             oninput = {oninput(row, col)}
                             id = {format!("tile-{}{}",row,col)}
+                            style = {
+                                format!("background: {};",
+                                    Self::id2background(self.col_brd[row][col])
+                                )
+                            }
                             />
                         }).collect::<Html>()
                     } </div>

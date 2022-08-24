@@ -13,4 +13,4 @@ https://blog.csdn.net/cnds123/article/details/125739434
 limiting contents in <input/>
 
 https://github.com/yewstack/yew/issues/593
-focus on a DOM element
+focus on a DOM element (deprecated)
