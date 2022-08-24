@@ -131,7 +131,7 @@ impl App {
             self.focus_prev();
             elm = self.get_focus_elm();
         }
-        if self.focus != (0, 0) {
+        if self.focus.1 != 0 {
             assert!(!elm.value().is_empty());
         }
         elm.set_value("");
