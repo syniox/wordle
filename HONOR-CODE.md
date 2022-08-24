@@ -14,3 +14,6 @@ limiting contents in <input/>
 
 https://github.com/yewstack/yew/issues/593
 focus on a DOM element (deprecated)
+
+
+game.rs: 74

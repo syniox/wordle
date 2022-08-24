@@ -302,6 +302,7 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        // Board helper
         let oninput = |row, col| {ctx.link().batch_callback(move |event: InputEvent| {
             let mut s = event.data().unwrap_or(String::new());
             if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
@@ -317,24 +318,28 @@ impl Component for App {
             }
             Msg::Press(event, row, col)
         })};
+        // Keybr helper
         let onclick = |c| {ctx.link().callback(move |e: MouseEvent| {
             Msg::Click(c)
         })};
         let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
         let keybr_r1 = keyarr2html(&KEYBOARD_1, &self.col_alpha, ctx);
         let keybr_r2 = keyarr2html(&KEYBOARD_2, &self.col_alpha, ctx);
+        // Stats helper
+        let (win_rounds, lose_rounds, avg_guesses) = self.stats.feed_stats();
+        let w_list = self.stats.feed_words();
 
         html! {
             <div style="text-align:center">
             // Menubar
-            <div class={"menubar"}>
+            //<div class={"menubar"}>
                 <input type="checkbox" id="hardmode"/>
                 /*
                 <button class={"keybr_button"} onclick={
                     ctx.link().callback(|e: MouseEvent| Msg::SwitchMode)
                 }/>*/
                 <label for="hardmode">{"Hard mode"}</label>
-            </div>
+            //</div>
             // Dashboard
             <div class={"board"}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {
@@ -359,29 +364,53 @@ impl Component for App {
             }
             </div>
             // Reset button
-            {
-                if self.game.ended() {
-                    html! {
-                        <button class={"keybr-button"} onclick={
-                            ctx.link().callback(|_: MouseEvent| Msg::Reset)
-                        }>{"reset!"}</button>
-                    }
-                } else {
-                    html! {}
-                }
+            if self.game.ended() {
+                <button class={"keybr-button"} onclick={
+                    ctx.link().callback(|_: MouseEvent| Msg::Reset)
+                }>{"Restart!"}</button>
             }
             // Keyboard
-            <div class={classes!("keybr_row")}>
-            { keybr_r0 }
-            </div>
-            <div class={classes!("keybr_row")}>
-            { keybr_r1 }
-            </div>
-            <div class={classes!("keybr_row")}>
-            <KeybrButton character="Enter" onclick={onclick('\n')} key_col={"grep"}/>
-            { keybr_r2 }
-            <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
-            </div>
+            if !self.game.ended(){
+                <div class={classes!("keybr_row")}>
+                { keybr_r0 }
+                </div>
+                <div class={classes!("keybr_row")}>
+                { keybr_r1 }
+                </div>
+                <div class={classes!("keybr_row")}>
+                <KeybrButton character="Enter" onclick={onclick('\n')} key_col={"grep"}/>
+                { keybr_r2 }
+                <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
+                </div>
+            }
+            // Statistics
+            if self.game.ended(){
+                if self.game.won() {
+                    <p style="color: green">{format!("Colgratulations!")}</p>
+                } else {
+                    <p>{format!("The correct answer is {}.", self.game.show_answer())}</p>
+                }
+                <p>{"Statictics:"}</p>
+                <div style="display:inline-flex">
+                <p style="margin:0.6em; color:green">{format!("Win: {}", win_rounds)}</p>
+                <p style="margin:0.6em; color:red">{format!("Lose: {}", lose_rounds)}</p>
+                <p style="margin:0.6em">{format!("AVG guesses: {:.2}", avg_guesses)}</p>
+                </div>
+                <p>{"Words used most:"}</p>
+                //<div style="float:left">
+                <table style="bold:false" align="center">
+                {
+                    w_list.iter().enumerate().map(|(index, (word, times))| html!{
+                        <tr>
+                            <th><button disabled={true}>{format!("NO.{}",index+1)}</button></th>
+                            <th>{format!("{}",times)}</th>
+                            <th>{format!("{}",word)}</th>
+                        </tr>
+                    }).collect::<Html>()
+                }
+                </table>
+                //</div>
+            }
             </div>
         }
     }

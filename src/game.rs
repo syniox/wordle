@@ -50,26 +50,35 @@ impl Stats {
         self.total_rounds += 1;
         self.games.push(game.state);
     }
-    pub fn print_stats(&self, is_tty: bool) {
-        let mut map = HashMap::<&str, i32>::new();
-        // load stats into helper vaiables
+    // return win_rounds, lose_rounds, avg_guesses
+    pub fn feed_stats(&self) -> (i32, i32, f64) {
         let (win_rounds, win_guesses) = self.games.iter()
             .filter(|x| Some(&x.answer) == x.guesses.last())
             .map(|x| (1, x.guesses.len()))
             .fold((0,0), |acc, x| (acc.0 + x.0, acc.1 + x.1));
+        let lose_rounds = self.total_rounds - win_rounds;
+        let avg_guesses = if win_rounds == 0 { 0f64 } else {
+            win_guesses as f64 / win_rounds as f64
+        };
+        (win_rounds, lose_rounds, avg_guesses)
+    }
+    pub fn feed_words(&self) -> Vec<(&str, i32)> {
+        let mut map = HashMap::<&str, i32>::new();
+        // load stats into helper vaiables
         for game in self.games.iter() {
             for guess in game.guesses.iter() {
                 map.entry(guess.as_str()).and_modify(|x| *x += 1).or_insert(1);
             }
         }
-        let lose_rounds = self.total_rounds - win_rounds;
-        let avg_guesses = if win_rounds == 0 { 0f64 } else {
-            win_guesses as f64 / win_rounds as f64
-        };
         // Find words that used most
-        let mut w_list: Vec<(&&str, &i32)> = map.iter().collect();
-        w_list.sort_by(|(&s1, &i1), (&s2, &i2)| Self::stat_cmp((s1, &i1), (s2, &i2)));
+        let mut w_list: Vec<(&str, i32)> = map.into_iter().collect();
+        w_list.sort_by(|(s1, i1), (s2, i2)| Self::stat_cmp((s1, i1), (s2, i2)));
         w_list.reverse();
+        w_list
+    }
+    pub fn print_stats(&self, is_tty: bool) {
+        let (win_rounds, lose_rounds, avg_guesses) = self.feed_stats();
+        let w_list = self.feed_words();
         if is_tty{
             let win_colored = console::style(format!("Win: {}",win_rounds)).green();
             let lose_colored = console::style(format!("Lose: {}",lose_rounds)).red();
@@ -124,13 +133,17 @@ impl Game{
             lim_alpha: vec![0i8; 26]
         }
     }
+    pub fn won(&self) -> bool {
+        match self.state.guesses.len() {
+            0 => false,
+            l => self.state.guesses[l - 1] == self.state.answer
+        }
+    }
     pub fn ended(&self) -> bool {
         let stat = &self.state;
         match stat.guesses.len() {
             utils::ROUNDS => true,
-            x if x > 0 => stat.guesses[stat.guesses.len() - 1] == stat.answer,
-            0 => false,
-            _ => unreachable!()
+            _ => self.won()
         }
     }
     pub fn rounds(&self) -> usize {
