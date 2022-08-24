@@ -25,6 +25,7 @@ enum Msg {
     Input(InputEvent, usize, usize), // row, col
     Press(KeyboardEvent, usize, usize), // row, col
     Click(char),
+    Reset
 }
 
 // TODO Set the answer of game
@@ -107,6 +108,23 @@ impl App {
     }
 
     pub fn start(&mut self) {
+        // clear colors
+        self.col_alpha.iter_mut().for_each(|col| *col = 0);
+        self.col_brd.iter_mut().for_each(|row| {
+            row.iter_mut().for_each(|col| *col = 0);
+        });
+        // clear characters
+        self.board.iter_mut().for_each(|row| {
+            row.iter_mut().for_each(|node| {
+                match node.cast::<HtmlInputElement>() {
+                    None => log::info!("missing element"),
+                    Some(elm) => elm.set_value("")
+                }
+            });
+        });
+        // ensure focus
+        self.focus = (0, 0);
+
         if let Some(w) = self.args.word.as_ref() {
             log::info!("answer copied from {}", w);
             self.game.set_answer(w.clone());
@@ -118,6 +136,7 @@ impl App {
                 }
                 Some(d) => d
             };
+            self.game = Game::new();
             let answer = self.words.final_list[d as usize].clone();
             self.game.set_answer(answer);
             self.args.day = Some(d + 1);
@@ -273,6 +292,9 @@ impl Component for App {
                     self.insert(c);
                 }
             }
+            Msg::Reset => {
+                self.start()
+            }
         }
         true
     }
@@ -326,6 +348,18 @@ impl Component for App {
                 }).collect::<Html>()
             }
             </div>
+            // Reset button
+            {
+                if self.game.ended() {
+                    html! {
+                        <button class={"keybr-button"} onclick={
+                            ctx.link().callback(|_: MouseEvent| Msg::Reset)
+                        }>{"reset!"}</button>
+                    }
+                } else {
+                    html! {}
+                }
+            }
             // Keyboard
             <div class={classes!("keybr_row")}>
             { keybr_r0 }
