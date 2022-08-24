@@ -153,7 +153,7 @@ impl App {
         if self.game.ended(){
             return;
         }
-        log::info!("backspace on {:?}, value: {}", self.focus, elm.value());
+        //log::info!("backspace on {:?}, value: {}", self.focus, elm.value());
         if elm.value().is_empty() {
             self.focus_prev();
             elm = self.get_focus_elm();
@@ -164,6 +164,7 @@ impl App {
         elm.set_value("");
     }
     pub fn linebreak(&mut self){
+        // collect the word or return if necessary
         if self.focus.1 != utils::LEN - 1 {
             return;
         }
@@ -177,6 +178,7 @@ impl App {
                 node.value().pop().unwrap()
             }).collect::<String>().to_ascii_uppercase();
         log::info!("submit guess: {}", guess);
+        // guess or invalid
         if !self.words.valid.contains(&guess) {
             log::warn!("invalid words: {}", guess);
             return;
@@ -323,8 +325,16 @@ impl Component for App {
         let keybr_r2 = keyarr2html(&KEYBOARD_2, &self.col_alpha, ctx);
 
         html! {
-            <h1 style="text-align:center">
+            <div style="text-align:center">
             // Menubar
+            <div class={"menubar"}>
+                <input type="checkbox" id="hardmode"/>
+                /*
+                <button class={"keybr_button"} onclick={
+                    ctx.link().callback(|e: MouseEvent| Msg::SwitchMode)
+                }/>*/
+                <label for="hardmode">{"Hard mode"}</label>
+            </div>
             // Dashboard
             <div class={"board"}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {
@@ -372,7 +382,7 @@ impl Component for App {
             { keybr_r2 }
             <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
             </div>
-            </h1>
+            </div>
         }
     }
 }
