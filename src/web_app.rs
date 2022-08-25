@@ -1,9 +1,8 @@
 use std::default::Default;
 use yew::{
-    events::{ InputEvent, KeyboardEvent, MouseEvent },
-    function_component, classes, 
-    Properties, html, Callback, Component, Context, Html,
-    NodeRef
+    classes,
+    events::{InputEvent, KeyboardEvent, MouseEvent},
+    function_component, html, Callback, Component, Context, Html, NodeRef, Properties,
 };
 // use wasm_bindgen::JsCast;
 // use wasm_bindgen::closure::Closure;
@@ -11,26 +10,26 @@ use yew::{
 extern crate web_sys;
 use web_sys::HtmlInputElement;
 
-mod utils;
 mod game;
-use game::{Game,Stats};
+mod utils;
+use game::{Game, Stats};
 
-mod words;
 mod builtin_words;
+mod words;
 
 mod args;
 use args::Args;
 
 enum Msg {
-    Input(InputEvent, usize, usize), // row, col
+    Input(InputEvent, usize, usize),    // row, col
     Press(KeyboardEvent, usize, usize), // row, col
     Click(char),
     SwitchMode,
-    Reset
+    Reset,
 }
 
 // TODO Set the answer of game
-struct App{
+struct App {
     game: Game,
     args: Args,
     stats: Stats,
@@ -39,7 +38,7 @@ struct App{
     words: words::Words,
     board: Vec<Vec<NodeRef>>,
     focus: (usize, usize),
-    hint: String
+    hint: String,
 }
 
 const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -48,8 +47,11 @@ const KEYBOARD_2: [char; 7] = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
 fn id2background(id: i8) -> &'static str {
     match id {
-        0 => "grep", 1 => "red", 2 => "yellow", 3 => "green",
-         _ => unreachable!()
+        0 => "grep",
+        1 => "red",
+        2 => "yellow",
+        3 => "green",
+        _ => unreachable!(),
     }
 }
 
@@ -57,7 +59,7 @@ fn id2background(id: i8) -> &'static str {
 pub struct KeybrButtonProps {
     pub onclick: Callback<MouseEvent>,
     pub character: String, // needed key_col
-    pub key_col: &'static str
+    pub key_col: &'static str,
 }
 
 #[function_component(KeybrButton)]
@@ -81,7 +83,7 @@ impl App {
         //log::info!("get focus elm: {:?}", self.focus);
         self.get_focus_ref().cast::<HtmlInputElement>().unwrap()
     }
-    fn apply_focus(&self){
+    fn apply_focus(&self) {
         //log::info!("apply focus to {:?}", self.focus);
         let elm = self.get_focus_elm();
         elm.focus().unwrap();
@@ -103,9 +105,9 @@ impl App {
         }
     }
     fn disabled(&self, row: usize, col: usize) -> bool {
-        return self.game.ended() || (row, col) !=self.focus;
+        return self.game.ended() || (row, col) != self.focus;
     }
-    fn postproc(&mut self){
+    fn postproc(&mut self) {
         self.stats.store_game(self.game.clone());
     }
 
@@ -117,12 +119,11 @@ impl App {
         });
         // clear characters
         self.board.iter_mut().for_each(|row| {
-            row.iter_mut().for_each(|node| {
-                match node.cast::<HtmlInputElement>() {
+            row.iter_mut()
+                .for_each(|node| match node.cast::<HtmlInputElement>() {
                     None => log::info!("missing element"),
-                    Some(elm) => elm.set_value("")
-                }
-            });
+                    Some(elm) => elm.set_value(""),
+                });
         });
         // ensure focus
         self.focus = (0, 0);
@@ -136,7 +137,7 @@ impl App {
                     log::warn!("day not initialized, initialize to 1");
                     1
                 }
-                Some(d) => d
+                Some(d) => d,
             };
             self.game = Game::new();
             let answer = self.words.final_list[d as usize].clone();
@@ -150,9 +151,9 @@ impl App {
             self.focus_next(false);
         }
     }
-    pub fn backspace(&mut self){
+    pub fn backspace(&mut self) {
         let mut elm = self.get_focus_elm();
-        if self.game.ended(){
+        if self.game.ended() {
             return;
         }
         //log::info!("backspace on {:?}, value: {}", self.focus, elm.value());
@@ -165,13 +166,15 @@ impl App {
         }
         elm.set_value("");
     }
-    pub fn linebreak(&mut self){
+    pub fn linebreak(&mut self) {
         // collect the word
-        let guess = self.board[self.focus.0].iter()
+        let guess = self.board[self.focus.0]
+            .iter()
             .map(|x| x.cast::<HtmlInputElement>().unwrap())
             .filter(|n| n.value().len() == 1)
             .map(|n| n.value().pop().unwrap())
-            .collect::<String>().to_ascii_uppercase();
+            .collect::<String>()
+            .to_ascii_uppercase();
         // return if invalid
         log::info!("submit guess: {}", guess);
         if guess.len() < utils::LEN {
@@ -203,8 +206,10 @@ impl App {
 }
 
 // Keyboard viewing function
-fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Context<T>)
-    -> Html where <T as yew::Component>::Message: From <Msg> {
+fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Context<T>) -> Html
+where
+    <T as yew::Component>::Message: From<Msg>,
+{
     html! {
         {
             arr.iter().map(|c| html! {
@@ -218,7 +223,6 @@ fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Con
 }
 
 impl Component for App {
-
     type Message = Msg;
     type Properties = ();
 
@@ -228,36 +232,35 @@ impl Component for App {
         if args.seed.is_none() {
             let mut s = [0u8];
             if let Err(e) = getrandom::getrandom(s.as_mut_slice()) {
-                log::warn!("failed to get random seed: {}",e);
+                log::warn!("failed to get random seed: {}", e);
             }
             args.seed = Some(s[0].into());
         }
         let mut app = Self {
             game: Game::new(),
             stats: Default::default(),
-            board: (0..utils::ROUNDS).map(|_| {
-                (0..utils::LEN).map(|_| NodeRef::default()).collect()
-            }).collect(),
+            board: (0..utils::ROUNDS)
+                .map(|_| (0..utils::LEN).map(|_| NodeRef::default()).collect())
+                .collect(),
             words: words::Words::new(&args),
             args: args,
             col_brd: vec![vec![0i8; utils::LEN]; utils::ROUNDS],
             col_alpha: vec![0i8; 26],
             focus: (0, 0),
-            hint: String::new()
+            hint: String::new(),
         };
         app.start();
         app
     }
 
     fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
-        if first_render {
-        }
+        if first_render {}
         self.apply_focus();
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         self.hint = String::new();
-        match msg{
+        match msg {
             Msg::Input(input, r, c) => {
                 //log::info!("typed on row {r} col {c}");
                 match input.input_type().as_str() {
@@ -267,7 +270,7 @@ impl Component for App {
                         assert!(s.len() == 1);
                         self.insert(s.pop().unwrap());
                     }
-                    s => log::warn!("Unused input_type: {}", s)
+                    s => log::warn!("Unused input_type: {}", s),
                 }
             }
             Msg::Press(event, r, c) => {
@@ -300,9 +303,7 @@ impl Component for App {
                     unreachable!();
                 }
             }
-            Msg::Reset => {
-                self.start()
-            }
+            Msg::Reset => self.start(),
         }
         true
     }
@@ -311,25 +312,27 @@ impl Component for App {
         // Header helper
         let hard_invld_msg = "Hard mode can only be enabled at the start of a round.";
         // Board helper
-        let oninput = |row, col| {ctx.link().batch_callback(move |event: InputEvent| {
-            let mut s = event.data().unwrap_or(String::new());
-            if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
-                Some(Msg::Input(event, row, col))
-            } else {
-                event.prevent_default();
-                None
-            }
-        })};
-        let onkeydown = |row, col| {ctx.link().callback(move |event: KeyboardEvent| {
-            if event.key() == "Enter" || event.key() == "Backspace" {
-                event.prevent_default();
-            }
-            Msg::Press(event, row, col)
-        })};
+        let oninput = |row, col| {
+            ctx.link().batch_callback(move |event: InputEvent| {
+                let mut s = event.data().unwrap_or(String::new());
+                if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
+                    Some(Msg::Input(event, row, col))
+                } else {
+                    event.prevent_default();
+                    None
+                }
+            })
+        };
+        let onkeydown = |row, col| {
+            ctx.link().callback(move |event: KeyboardEvent| {
+                if event.key() == "Enter" || event.key() == "Backspace" {
+                    event.prevent_default();
+                }
+                Msg::Press(event, row, col)
+            })
+        };
         // Keybr helper
-        let onclick = |c| {ctx.link().callback(move |e: MouseEvent| {
-            Msg::Click(c)
-        })};
+        let onclick = |c| ctx.link().callback(move |_| Msg::Click(c));
         let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
         let keybr_r1 = keyarr2html(&KEYBOARD_1, &self.col_alpha, ctx);
         let keybr_r2 = keyarr2html(&KEYBOARD_2, &self.col_alpha, ctx);
@@ -429,7 +432,7 @@ impl Component for App {
     }
 }
 
-fn main(){
+fn main() {
     wasm_logger::init(wasm_logger::Config::default());
     yew::start_app::<App>();
 }
