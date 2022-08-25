@@ -25,6 +25,7 @@ enum Msg {
     Press(KeyboardEvent),
     Click(char),
     SwitchMode,
+    Refresh,
     Reset,
 }
 
@@ -47,7 +48,7 @@ const KEYBOARD_2: [char; 7] = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
 
 fn id2background(id: i8) -> &'static str {
     match id {
-        0 => "grep",
+        0 => "default",
         1 => "red",
         2 => "yellow",
         3 => "green",
@@ -293,9 +294,12 @@ impl Component for App {
                     self.linebreak();
                 } else {
                     let elm = self.get_focus_elm();
-                    assert!(elm.value().is_empty());
-                    elm.set_value(&c.to_string());
-                    self.insert(c);
+                    if elm.value().is_empty() {
+                        elm.set_value(&c.to_string());
+                        self.insert(c);
+                    } else {
+                        assert!(self.focus.1 == utils::LEN - 1);
+                    }
                 }
             }
             Msg::SwitchMode => {
@@ -305,6 +309,7 @@ impl Component for App {
                     unreachable!();
                 }
             }
+            Msg::Refresh => (),
             Msg::Reset => self.start(),
         }
         true
@@ -364,6 +369,7 @@ impl Component for App {
                             maxlength={1}
                             onkeydown={onkeydown}
                             oninput={oninput}
+                            onclick={ctx.link().callback(|_| Msg::Refresh)}
                             style={
                                 format!("background: {};",
                                     id2background(self.col_brd[row][col])

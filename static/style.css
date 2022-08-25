@@ -87,3 +87,12 @@
 
     text-transform: uppercase;
 }
+
+.keybr-button:hover {
+    /*box-shadow: #86b7fe 1px solid;*/
+    outline: #86b7fe 1px solid;
+}
+.keybr-button:active {
+    /*box-shadow: #5672ae 2px solid;*/
+    outline: #5672ae 2px solid;
+}
