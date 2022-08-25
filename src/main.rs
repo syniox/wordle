@@ -66,7 +66,6 @@ fn main() -> Result<(), utils::ErrorT> {
         let answer = if let Some(w) = args.word.as_ref() {
             w.clone()
         } else if !args.random {
-            //TODO check whether the word is valid
             if args.tty {
                 utils::warn("You aren't using random mode. Please type answer first.");
                 read_word_hinted(&args, &game, Some(&words.r#final))

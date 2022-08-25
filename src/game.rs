@@ -199,7 +199,7 @@ impl Game {
     pub fn show_col(&self) -> (&Vec<i8>, &Vec<i8>) {
         (&self.col_pos, &self.col_alpha)
     }
-
+    // Check whether the word meets the requirement of hard mode
     pub fn hard_check(&self, guess: &str) -> bool {
         let mut cnt_alpha = vec![0i8; 26];
         // ensure user uses all green state
@@ -218,7 +218,7 @@ impl Game {
         }
         true
     }
-
+    // Receive user's guesses and update color/requirement
     pub fn guess(&mut self, guess: String) -> bool {
         assert!(guess.len() == utils::LEN);
         self.state.guesses.push(guess.clone());
