@@ -334,6 +334,8 @@ impl Component for App {
             }
             Msg::Press(event)
         });
+        // Document helper: help focus on the right thing
+        let refresh = &ctx.link().callback(|_| Msg::Refresh);
         // Keybr helper
         let onclick = |c| ctx.link().callback(move |_| Msg::Click(c));
         let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
@@ -360,7 +362,7 @@ impl Component for App {
             }
             </p>
             // Dashboard
-            <div class={"board"}> {
+            <div class={"board"} onclick={refresh}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {
                     <div class={"row"}> {
                         x.iter().enumerate().map(|(col, _)| html! {
@@ -369,7 +371,6 @@ impl Component for App {
                             maxlength={1}
                             onkeydown={onkeydown}
                             oninput={oninput}
-                            onclick={ctx.link().callback(|_| Msg::Refresh)}
                             style={
                                 format!("background: {};",
                                     id2background(self.col_brd[row][col])
