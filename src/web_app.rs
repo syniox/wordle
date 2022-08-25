@@ -21,8 +21,8 @@ mod args;
 use args::Args;
 
 enum Msg {
-    Input(InputEvent, usize, usize),    // row, col
-    Press(KeyboardEvent, usize, usize), // row, col
+    Input(InputEvent),
+    Press(KeyboardEvent),
     Click(char),
     SwitchMode,
     Reset,
@@ -178,7 +178,7 @@ impl App {
         // return if invalid
         log::info!("submit guess: {}", guess);
         if guess.len() < utils::LEN {
-            self.hint = format!("Word length not enough: {}", guess);
+            self.hint = format!("Not enough letters: {}", guess);
             return;
         }
         if !self.words.valid.contains(&guess) {
@@ -190,7 +190,7 @@ impl App {
             self.hint = format!("{}: must use information revealed before.", guess);
             return;
         }
-        let win = self.game.guess(guess);
+        self.game.guess(guess);
         // colorize
         let (col_pos, col_alpha) = self.game.show_col();
         log::info!("color: {:?}", col_pos);
@@ -214,8 +214,8 @@ where
         {
             arr.iter().map(|c| html! {
                 <KeybrButton character={c.to_string()}
-                    onclick={ &ctx.link().callback(|_: MouseEvent| Msg::Click(*c)) }
-                    key_col = {id2background(col[*c as usize - 'A' as usize])}
+                    onclick={&ctx.link().callback(|_: MouseEvent| Msg::Click(*c))}
+                    key_col={id2background(col[*c as usize - 'A' as usize])}
                     />
             }).collect::<Html>()
         }
@@ -228,6 +228,7 @@ impl Component for App {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let mut args: args::Args = Default::default();
+        // Set random mode to true and add random seed since this is a web app
         args.random = true;
         if args.seed.is_none() {
             let mut s = [0u8];
@@ -254,15 +255,14 @@ impl Component for App {
     }
 
     fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
-        if first_render {}
         self.apply_focus();
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         self.hint = String::new();
         match msg {
-            Msg::Input(input, r, c) => {
-                //log::info!("typed on row {r} col {c}");
+            // Handle inputs expect backspace and Enter
+            Msg::Input(input) => {
                 match input.input_type().as_str() {
                     "insertText" => {
                         let mut s = input.data().unwrap();
@@ -273,7 +273,8 @@ impl Component for App {
                     s => log::warn!("Unused input_type: {}", s),
                 }
             }
-            Msg::Press(event, r, c) => {
+            // Handle backspace and enter
+            Msg::Press(event) => {
                 if event.key() == "Enter" {
                     //log::info!("Pressed: {}", event.key());
                     self.linebreak();
@@ -283,6 +284,7 @@ impl Component for App {
                     self.backspace();
                 }
             }
+            // Handle on-screen keyboard inputs
             Msg::Click(c) => {
                 log::info!("Clicked: {}", c);
                 if c == '\x08' {
@@ -312,25 +314,21 @@ impl Component for App {
         // Header helper
         let hard_invld_msg = "Hard mode can only be enabled at the start of a round.";
         // Board helper
-        let oninput = |row, col| {
-            ctx.link().batch_callback(move |event: InputEvent| {
-                let mut s = event.data().unwrap_or(String::new());
-                if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
-                    Some(Msg::Input(event, row, col))
-                } else {
-                    event.prevent_default();
-                    None
-                }
-            })
-        };
-        let onkeydown = |row, col| {
-            ctx.link().callback(move |event: KeyboardEvent| {
-                if event.key() == "Enter" || event.key() == "Backspace" {
-                    event.prevent_default();
-                }
-                Msg::Press(event, row, col)
-            })
-        };
+        let oninput = &ctx.link().batch_callback(|event: InputEvent| {
+            let mut s = event.data().unwrap_or(String::new());
+            if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
+                Some(Msg::Input(event))
+            } else {
+                event.prevent_default();
+                None
+            }
+        });
+        let onkeydown = &ctx.link().callback(|event: KeyboardEvent| {
+            if event.key() == "Enter" || event.key() == "Backspace" {
+                event.prevent_default();
+            }
+            Msg::Press(event)
+        });
         // Keybr helper
         let onclick = |c| ctx.link().callback(move |_| Msg::Click(c));
         let keybr_r0 = keyarr2html(&KEYBOARD_0, &self.col_alpha, ctx);
@@ -364,9 +362,8 @@ impl Component for App {
                             <input class={"tile"}
                             ref={self.board[row][col].clone()}
                             maxlength={1}
-                            onkeydown={onkeydown(row,col)}
-                            oninput={oninput(row, col)}
-                            id={format!("tile-{}{}",row,col)}
+                            onkeydown={onkeydown}
+                            oninput={oninput}
                             style={
                                 format!("background: {};",
                                     id2background(self.col_brd[row][col])
