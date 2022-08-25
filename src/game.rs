@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::{cmp, collections::HashMap, fmt, iter::zip};
+use std::{
+    cmp,
+    collections::{HashMap, HashSet},
+    fmt,
+    iter::zip,
+};
 
 use crate::{utils, utils::apmax};
 
@@ -248,5 +253,50 @@ impl Game {
             );
         }
         guess == self.state.answer
+    }
+
+    pub fn find_valid(&self, words: Vec<String>) -> Vec<String> {
+        assert!(!self.state.guesses.is_empty());
+        let mut has_red = vec![false; 26];
+        let mut ulim_alpha = vec![0i8; 26];
+        let guess = self.state.guesses.last().unwrap();
+        for (i, c) in guess.chars().enumerate() {
+            if self.col_pos[i] >= Self::color2id('Y') {
+                ulim_alpha[Self::alpha2id(c)] += 1;
+            }
+            if self.col_pos[i] == Self::color2id('R') {
+                has_red[Self::alpha2id(c)] = true;
+            }
+        }
+        let ulim_alpha: Vec<i8> = has_red.iter()
+            .zip(ulim_alpha.iter())
+            .map(|(&red, &lim)| if red { lim } else { 100i8 })
+            .collect();
+
+        words.into_iter()
+            .filter(|word| {
+                let mut cnt_alpha = [0i8; 26];
+                let mut invld = false;
+                // invalid green position
+                invld |= self.state.answer.chars()
+                    .zip(word.chars())
+                    .zip(self.col_pos.iter())
+                    .any(|((ans, ch), &col)| col == 3 && ans != ch);
+                // invalid yellow position
+                invld |= guess.chars()
+                    .zip(word.chars())
+                    .zip(self.col_pos.iter())
+                    .any(|((guess, word), &col)| col == 2 && guess == word);
+                // invalid char count
+                word.chars()
+                    .for_each(|c| cnt_alpha[Self::alpha2id(c) as usize] += 1);
+                for i in 0..26 {
+                    if cnt_alpha[i] > ulim_alpha[i] || cnt_alpha[i] < self.lim_alpha[i] {
+                        invld |= true;
+                    }
+                }
+                !invld
+            })
+            .collect()
     }
 }

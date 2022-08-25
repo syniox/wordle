@@ -5,6 +5,11 @@ use serde::Deserialize;
 #[derive(Default, Parser, Debug, Deserialize)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
+    /// show acceptable word list
+    #[clap(short, long, value_parser)]
+    #[serde(skip)]
+    pub hint: bool,
+
     /// whether using tty
     /// should not be parsed by serde
     #[clap(skip)]

@@ -58,6 +58,7 @@ fn main() -> Result<(), utils::ErrorT> {
     if args.tty {
         println!("Welcome to {}!", console::style("wordle").blink().blue());
     }
+    let mut valid_hints: Vec<String> = words.valid.iter().cloned().collect();
 
     for day in args.day.unwrap() - 1.. {
         // Init game
@@ -112,6 +113,11 @@ fn main() -> Result<(), utils::ErrorT> {
                 }
                 break;
             }
+
+            if args.hint {
+                valid_hints = game.find_valid(valid_hints);
+                println!("{:?}", valid_hints);
+            }
         }
         if !win {
             if args.tty {
@@ -129,15 +135,19 @@ fn main() -> Result<(), utils::ErrorT> {
         }
         // find out whether the program should continue
         if args.word.is_none() {
-            let mut line = utils::read_line()?;
+            if args.tty {
+                println!("Try again? (Y/N)");
+            }
+            let mut line = utils::read_line()?.to_ascii_uppercase();
             while args.tty && line != "N" && line != "Y" && line != "" {
-                line = utils::read_line()?;
+                println!("Try again? (Y/N)");
+                line = utils::read_line()?.to_ascii_uppercase();
             }
             let line = line;
             if line != "N" && line != "Y" && line != "" {
                 panic!("should we continue?");
             }
-            if line == "N" {
+            if line == "N" || line == "" {
                 break;
             }
         } else {
