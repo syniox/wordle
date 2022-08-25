@@ -1,6 +1,4 @@
-:root{
-    /*font-family: 'Courier New', Courier, monospace;*/
-}
+:root{}
 
 /*
 .board {
@@ -20,7 +18,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    grid-template-columns: repeat(5,auto); /* why sanuli use 1 fr? */
+    grid-template-columns: repeat(5,auto);
     grid-gap: 5px;
     margin: 3px;
 }
@@ -57,7 +55,6 @@
     border-radius: 3px;
     color: var(--white);
 
-    /* cursor: pointer; */
     user-select: none;
     -webkit-user-select: none;
 
@@ -69,10 +66,8 @@
 }
 
 .keybr-button:hover {
-    /*box-shadow: #86b7fe 1px solid;*/
     outline: #86b7fe 1px solid;
 }
 .keybr-button:active {
-    /*box-shadow: #5672ae 2px solid;*/
     outline: #5672ae 2px solid;
 }
