@@ -74,6 +74,7 @@ impl Stats {
         let mut w_list: Vec<(&str, i32)> = map.into_iter().collect();
         w_list.sort_by(|(s1, i1), (s2, i2)| Self::stat_cmp((s1, i1), (s2, i2)));
         w_list.reverse();
+        w_list.truncate(5);
         w_list
     }
     pub fn print_stats(&self, is_tty: bool) {
@@ -85,7 +86,6 @@ impl Stats {
             println!("{}, {}, Avg guesses: {:.2}", win_colored, lose_colored, avg_guesses);
             println!("Used most:");
             for (i, w) in w_list.iter().enumerate() {
-                if i == utils::LEN { break; }
                 if i != 0 { print!(" "); }
                 print!("{} ({} time(s))", w.0, w.1);
             }
@@ -93,7 +93,6 @@ impl Stats {
             // TODO: use prettier oput
             println!("{} {} {:.2}", win_rounds, lose_rounds, avg_guesses);
             for (i, w) in w_list.iter().enumerate() {
-                if i == utils::LEN { break; }
                 if i != 0 { print!(" "); }
                 print!("{} {}", w.0, w.1);
             }

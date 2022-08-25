@@ -382,10 +382,10 @@ impl Component for App {
                     ctx.link().callback(|_: MouseEvent| Msg::Reset)
                 }>{"Restart!"}</button>
             }
-            // Hint board
-            <p style="white-space:pre">{format!("{} ", self.hint)}</p>
-            // Keyboard
             if !self.game.ended(){
+                // Hint board
+                <p style="white-space:pre">{format!("{} ", self.hint)}</p>
+                // Keyboard
                 <div class={classes!("keybr_row")}>
                 { keybr_r0 }
                 </div>
@@ -412,8 +412,7 @@ impl Component for App {
                 <p style="margin:0.6em">{format!("AVG guesses: {:.2}", avg_guesses)}</p>
                 </div>
                 <p>{"Words used most:"}</p>
-                //<div style="float:left">
-                <table style="bold:false" align="center">
+                <table style="" align="center">
                 {
                     w_list.iter().enumerate().map(|(index, (word, times))| html!{
                         <tr>
