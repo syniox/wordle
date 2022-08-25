@@ -24,12 +24,14 @@ enum Msg {
     Input(InputEvent),
     Press(KeyboardEvent),
     Click(char),
+    // Hard mode switch
     SwitchMode,
+    // Refresh the page to get the focus right
     Refresh,
+    // Reset the game
     Reset,
 }
 
-// TODO Set the answer of game
 struct App {
     game: Game,
     args: Args,
@@ -76,7 +78,7 @@ pub fn keybr_button(props: &KeybrButtonProps) -> Html {
 }
 
 impl App {
-    // focus on the right thing
+    // Focus on the right thing
     fn get_focus_ref(&self) -> NodeRef {
         self.board[self.focus.0][self.focus.1].clone()
     }
@@ -108,17 +110,14 @@ impl App {
     fn disabled(&self, row: usize, col: usize) -> bool {
         return self.game.ended() || (row, col) != self.focus;
     }
-    fn postproc(&mut self) {
-        self.stats.store_game(self.game.clone());
-    }
 
     pub fn start(&mut self) {
-        // clear colors
+        // Clear colors
         self.col_alpha.iter_mut().for_each(|col| *col = 0);
         self.col_brd.iter_mut().for_each(|row| {
             row.iter_mut().for_each(|col| *col = 0);
         });
-        // clear characters
+        // Clear characters
         self.board.iter_mut().for_each(|row| {
             row.iter_mut()
                 .for_each(|node| match node.cast::<HtmlInputElement>() {
@@ -126,7 +125,7 @@ impl App {
                     Some(elm) => elm.set_value(""),
                 });
         });
-        // ensure focus
+        // Ensure focus
         self.focus = (0, 0);
 
         if let Some(w) = self.args.word.as_ref() {
@@ -168,7 +167,7 @@ impl App {
         elm.set_value("");
     }
     pub fn linebreak(&mut self) {
-        // collect the word
+        // Collect the word
         let guess = self.board[self.focus.0]
             .iter()
             .map(|x| x.cast::<HtmlInputElement>().unwrap())
@@ -176,7 +175,7 @@ impl App {
             .map(|n| n.value().pop().unwrap())
             .collect::<String>()
             .to_ascii_uppercase();
-        // return if invalid
+        // Return if invalid
         log::info!("submit guess: {}", guess);
         if guess.len() < utils::LEN {
             self.hint = format!("Not enough letters: {}", guess);
@@ -192,21 +191,21 @@ impl App {
             return;
         }
         self.game.guess(guess);
-        // colorize
+        // Colorize
         let (col_pos, col_alpha) = self.game.show_col();
         log::info!("color: {:?}", col_pos);
         self.col_brd[self.focus.0] = col_pos.clone();
         self.col_alpha = col_alpha.clone();
-        // post-process
+        // Post process or continue
         if self.game.ended() {
-            self.postproc();
+            self.stats.store_game(self.game.clone());
         } else {
             self.focus_next(true);
         }
     }
 }
 
-// Keyboard viewing function
+// Collect a row of Keyboard using given array
 fn keyarr2html<T: yew::Component>(arr: &'static [char], col: &Vec<i8>, ctx: &Context<T>) -> Html
 where
     <T as yew::Component>::Message: From<Msg>,
@@ -274,7 +273,7 @@ impl Component for App {
                     s => log::warn!("Unused input_type: {}", s),
                 }
             }
-            // Handle backspace and enter
+            // Handle backspace and enter whereas oninput doesn't work
             Msg::Press(event) => {
                 if event.key() == "Enter" {
                     //log::info!("Pressed: {}", event.key());
@@ -347,7 +346,7 @@ impl Component for App {
 
         html! {
             <div style="text-align:center">
-            // Menubar
+            // Hardmode checkbox
             <p>
             if self.game.rounds() == 0 || self.game.ended() || self.args.difficult {
                 <input type="checkbox" id="hardmode" checked={self.args.difficult} oninput={
@@ -389,6 +388,7 @@ impl Component for App {
                     ctx.link().callback(|_: MouseEvent| Msg::Reset)
                 }>{"Restart!"}</button>
             }
+
             if !self.game.ended(){
                 // Hint board
                 <p style="white-space:pre">{format!("{} ", self.hint)}</p>
@@ -412,12 +412,14 @@ impl Component for App {
                 } else {
                     <p>{format!("The correct answer is {}.", self.game.show_answer())}</p>
                 }
+
                 <p>{"Statictics:"}</p>
                 <div style="display:inline-flex">
                 <p style="margin:0.6em; color:green">{format!("Win: {}", win_rounds)}</p>
                 <p style="margin:0.6em; color:red">{format!("Lose: {}", lose_rounds)}</p>
                 <p style="margin:0.6em">{format!("AVG guesses: {:.2}", avg_guesses)}</p>
                 </div>
+
                 <p>{"Words used most:"}</p>
                 <table style="" align="center">
                 {

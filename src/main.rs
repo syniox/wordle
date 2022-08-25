@@ -1,8 +1,8 @@
 use console;
-use rand::{SeedableRng, prelude::SliceRandom};
+use rand::{prelude::SliceRandom, SeedableRng};
 use std::{
+    collections::HashSet,
     io::{self, Write},
-    collections::HashSet
 };
 
 mod args;
@@ -20,17 +20,25 @@ mod builtin_words;
 
 fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -> String {
     loop {
-        match utils::read_word(words){
-            Ok(w) => if !args.difficult || game.hard_check(&w) {
-                break w
-            } else {
+        match utils::read_word(words) {
+            Ok(w) => {
+                if !args.difficult || game.hard_check(&w) {
+                    break w;
+                } else {
+                    if args.tty {
+                        utils::warn("Please type a word according to the information you've got.");
+                    } else {
+                        println!("INVALID")
+                    }
+                }
+            }
+            Err(e) => {
                 if args.tty {
-                    utils::warn("Please type a word according to the information you've got.");
-                } else { println!("INVALID") }
-            },
-            Err(e) => if args.tty {
-                utils::warn(&format!("{}, please type a correct 5-character word.",e));
-            } else { println!("INVALID") }
+                    utils::warn(&format!("{}, please type a correct 5-character word.", e));
+                } else {
+                    println!("INVALID")
+                }
+            }
         };
     }
 }
@@ -45,7 +53,7 @@ fn main() -> Result<(), utils::ErrorT> {
     let words = words::Words::new(&args);
     let mut stats = match args.state.as_ref() {
         None => Stats::new(),
-        Some(f) => serde_json::from_str(&utils::str_from_file(f))?
+        Some(f) => serde_json::from_str(&utils::str_from_file(f))?,
     };
     if args.tty {
         println!("Welcome to {}!", console::style("wordle").blink().blue());
@@ -83,7 +91,7 @@ fn main() -> Result<(), utils::ErrorT> {
                     print!("{}", utils::colorize_id(col_pos[i]).apply_to(c));
                 }
                 print!(" ");
-                for(i, c) in ('A'..='Z').enumerate() {
+                for (i, c) in ('A'..='Z').enumerate() {
                     print!("{}", utils::colorize_id(col_alpha[i]).apply_to(c));
                 }
                 println!("");
@@ -94,18 +102,24 @@ fn main() -> Result<(), utils::ErrorT> {
 
             if win {
                 if args.tty {
-                    println!("Congratulations! You made it with {} {}.",
-                        round+1, if round == 0 { "guess" } else { "guesses" });
+                    println!(
+                        "Congratulations! You made it with {} {}.",
+                        round + 1,
+                        if round == 0 { "guess" } else { "guesses" }
+                    );
                 } else {
-                    println!("CORRECT {}", round+1);
+                    println!("CORRECT {}", round + 1);
                 }
                 break;
             }
         }
         if !win {
             if args.tty {
-                println!("Sorry that you failed. The answer is {}", game.show_answer());
-            } else{
+                println!(
+                    "Sorry that you failed. The answer is {}",
+                    game.show_answer()
+                );
+            } else {
                 println!("FAILED {}", game.show_answer());
             }
         }
