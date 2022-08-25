@@ -14,31 +14,9 @@ mod utils;
 mod game;
 use game::{Game, Stats};
 
-mod builtin_words;
+mod words;
 
-// return final_words_list, final_words, valid_words
-fn load_word_list(args: &args::Args) -> (Vec<String>, HashSet<String>, HashSet<String>){
-    let mut final_words_list: Vec<String> = match args.final_set.as_ref() {
-        None => utils::from_arr(builtin_words::FINAL),
-        Some(f) => utils::arr_from_file(f)
-    };
-    final_words_list.iter_mut().for_each(|x| x.make_ascii_uppercase());
-    let final_words: HashSet<String> = final_words_list.iter().map(|x| x.clone()).collect();
-    let mut valid_words_list: Vec<String> = match args.acceptable_set.as_ref() {
-        None => utils::from_arr(builtin_words::ACCEPTABLE),
-        Some(f) => utils::arr_from_file(f)
-    };
-    valid_words_list.iter_mut().for_each(|x| x.make_ascii_uppercase());
-    let valid_words: HashSet<String> = valid_words_list.into_iter().collect();
-    for word in final_words_list.iter() {
-        assert!(valid_words.contains(word));
-    }
-    if args.random {
-        let mut rng = rand::rngs::StdRng::seed_from_u64(args.seed.unwrap());
-        final_words_list.shuffle(&mut rng);
-    }
-    (final_words_list, final_words, valid_words)
-}
+mod builtin_words;
 
 fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -> String {
     loop {
@@ -57,7 +35,6 @@ fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -
     }
 }
 
-
 /// The main function for the Wordle game, implement your own logic here
 fn main() -> Result<(), utils::ErrorT> {
     let mut args = Args::parse();
@@ -65,7 +42,7 @@ fn main() -> Result<(), utils::ErrorT> {
     args.refine();
     let args = args;
 
-    let (final_words_list, final_words, valid_words) = load_word_list(&args);
+    let words = words::Words::new(&args);
     let mut stats = match args.state.as_ref() {
         None => Stats::new(),
         Some(f) => serde_json::from_str(&utils::str_from_file(f))?
@@ -83,20 +60,21 @@ fn main() -> Result<(), utils::ErrorT> {
             //TODO check whether the word is valid
             if args.tty {
                 utils::warn("You aren't using random mode. Please type answer first.");
-                read_word_hinted(&args, &game, Some(&final_words))
+                read_word_hinted(&args, &game, Some(&words.r#final))
             } else {
-                utils::read_word(Some(&final_words))?
+                utils::read_word(Some(&words.r#final))?
             }
         } else {
-            final_words_list[day as usize].to_string()
+            words.final_list[day as usize].to_string()
         };
         game.set_answer(answer);
+
         if args.tty {
             println!("Now, please guess the 5-character word!");
         }
         let mut win = false;
         for round in 0..utils::ROUNDS {
-            let word = read_word_hinted(&args, &game, Some(&valid_words));
+            let word = read_word_hinted(&args, &game, Some(&words.valid));
             win = game.guess(word.clone());
             // print guess result
             if args.tty {
@@ -152,6 +130,7 @@ fn main() -> Result<(), utils::ErrorT> {
             break;
         }
     }
+    // Save state to json
     if let Some(file) = args.state {
         utils::str_to_file(serde_json::to_string_pretty(&stats)?.as_str(), &file);
     }

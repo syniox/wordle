@@ -1,10 +1,10 @@
+use crate::utils::str_from_file;
 use clap::Parser;
 use serde::Deserialize;
-use crate::utils::str_from_file;
 
-#[derive(Parser, Debug, Deserialize)]
+#[derive(Default, Parser, Debug, Deserialize)]
 #[clap(author, version, about, long_about = None)]
-pub struct Args{
+pub struct Args {
     /// whether using tty
     /// should not be parsed by serde
     #[clap(skip)]
@@ -59,10 +59,10 @@ pub struct Args{
     /// Specify config file
     #[clap(short, long, value_parser)]
     #[serde(default)]
-    pub config: Option<String>
+    pub config: Option<String>,
 }
 
-impl Args{
+impl Args {
     pub fn refine(&mut self) {
         // port config file into config
         if let Some(cfg) = self.config.as_ref() {
