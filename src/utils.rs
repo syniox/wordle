@@ -1,13 +1,15 @@
-use std::{io, fs};
 use std::collections::HashSet;
+use std::{fs, io};
 
-pub const ROUNDS: i32 = 6;
+pub const ROUNDS: usize = 6;
 pub const LEN: usize = 5;
 
 pub type ErrorT = Box<dyn std::error::Error>;
 
 pub fn apmax<T: Copy + std::cmp::Ord>(a: &mut T, b: T) {
-    if *a < b { *a = b; }
+    if *a < b {
+        *a = b;
+    }
 }
 
 // tty related
@@ -20,10 +22,10 @@ pub fn colorize_id(id: i8) -> console::Style {
         1 => Style::new().red(),
         2 => Style::new().yellow(),
         3 => Style::new().green(),
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
-pub fn warn(msg: &str){
+pub fn warn(msg: &str) {
     println!("{}", console::style(msg).red());
 }
 
@@ -37,7 +39,10 @@ pub fn read_line() -> Result<String, ErrorT> {
 pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
     let line = read_line()?.to_ascii_uppercase();
     if line.len() != LEN {
-        return Err(ErrorT::from(format!("The length of {} isn't {}", line, LEN)));
+        return Err(ErrorT::from(format!(
+            "The length of {} isn't {}",
+            line, LEN
+        )));
     }
     if let Some(w) = words.as_ref() {
         if w.contains(&line) {
@@ -45,7 +50,7 @@ pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
         } else {
             Err(ErrorT::from(format!("{} isn't a correct word", line)))
         }
-    } else{
+    } else {
         Ok(line)
     }
 }
@@ -56,11 +61,14 @@ pub fn from_arr<T: std::iter::FromIterator<String>>(arr: &[&str]) -> T {
 
 // file I/O related
 pub fn str_to_file(s: &str, file: &str) {
-    fs::write(file, format!("{}\n",s)).unwrap();
+    fs::write(file, format!("{}\n", s)).unwrap();
 }
 pub fn str_from_file(file: &str) -> String {
     fs::read_to_string(file).expect(format!("cannot read file {}", file).as_str())
 }
 pub fn arr_from_file<T: std::iter::FromIterator<String>>(file: &str) -> T {
-    str_from_file(file).split_whitespace().map(|x| x.to_string()).collect()
+    str_from_file(file)
+        .split_whitespace()
+        .map(|x| x.to_string())
+        .collect()
 }
