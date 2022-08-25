@@ -30,6 +30,6 @@ pretty_assertions = "1.2.1"
 [[bin]]
 name = "wordle"
 # when testing:
-# path = "src/main.rs"
+path = "src/main.rs"
 # when using trunk:
-path = "src/web_app.rs"
+# path = "src/web_app.rs"

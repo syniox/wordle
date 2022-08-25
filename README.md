@@ -2,6 +2,16 @@
 
 2022 年夏季学期《程序设计训练》 Rust 课堂大作业（一）。
 
+WASM项目在线demo:
+https://wordle-ein.pages.dev
+
+编译成WASM:
+1. 在Cargo.toml中，注释掉`path = src/src/main.rs`并删掉`path = src/web_app.rs`的注释
+2. `trunk build --release`
+生成的web文件应该出现在dist/目录下
+
+测试可以在dist/目录下指令`python -m http.proxy`
+
 ## 作业要求
 
 具体要求请查看[作业文档](https://lab.cs.tsinghua.edu.cn/rust/projects/wordle/)。
