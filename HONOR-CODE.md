@@ -10,10 +10,12 @@ https://yew.rs/docs/concepts/html for yew html!, classes! and all the way
 https://zhuanlan.zhihu.com/p/104859486 for html
 
 https://blog.csdn.net/cnds123/article/details/125739434
-limiting contents in <input/>
+limiting contents in `<input/>`
 
 https://github.com/yewstack/yew/issues/593
 focus on a DOM element (deprecated)
+
+https://stackoverflow.com/questions/28916559/how-to-get-checkbox-label-to-be-on-the-left-of-checkbox
 
 
 game.rs: 74

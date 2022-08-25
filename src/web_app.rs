@@ -25,6 +25,7 @@ enum Msg {
     Input(InputEvent, usize, usize), // row, col
     Press(KeyboardEvent, usize, usize), // row, col
     Click(char),
+    SwitchMode,
     Reset
 }
 
@@ -37,7 +38,8 @@ struct App{
     col_alpha: Vec<i8>,
     words: words::Words,
     board: Vec<Vec<NodeRef>>,
-    focus: (usize, usize)
+    focus: (usize, usize),
+    hint: String
 }
 
 const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -164,27 +166,25 @@ impl App {
         elm.set_value("");
     }
     pub fn linebreak(&mut self){
-        // collect the word or return if necessary
-        if self.focus.1 != utils::LEN - 1 {
-            return;
-        }
-        if self.get_focus_elm().value().is_empty() {
-            return;
-        }
+        // collect the word
         let guess = self.board[self.focus.0].iter()
-            .map(|x| {
-                let node = x.cast::<HtmlInputElement>().unwrap();
-                assert!(node.value().len() == 1);
-                node.value().pop().unwrap()
-            }).collect::<String>().to_ascii_uppercase();
+            .map(|x| x.cast::<HtmlInputElement>().unwrap())
+            .filter(|n| n.value().len() == 1)
+            .map(|n| n.value().pop().unwrap())
+            .collect::<String>().to_ascii_uppercase();
+        // return if invalid
         log::info!("submit guess: {}", guess);
-        // guess or invalid
+        if guess.len() < utils::LEN {
+            self.hint = format!("Word length not enough: {}", guess);
+            return;
+        }
         if !self.words.valid.contains(&guess) {
             log::warn!("invalid words: {}", guess);
+            self.hint = format!("{} isn't a word.", guess);
             return;
         }
-        if self.args.difficult && self.game.hard_check(&guess) {
-            log::warn!("must use information revealed before");
+        if self.args.difficult && !self.game.hard_check(&guess) {
+            self.hint = format!("{}: must use information revealed before.", guess);
             return;
         }
         let win = self.game.guess(guess);
@@ -194,10 +194,7 @@ impl App {
         self.col_brd[self.focus.0] = col_pos.clone();
         self.col_alpha = col_alpha.clone();
         // post-process
-        if win {
-            log::info!("you win!");
-            self.postproc();
-        } else if self.focus.0 == utils::ROUNDS - 1 {
+        if self.game.ended() {
             self.postproc();
         } else {
             self.focus_next(true);
@@ -245,7 +242,8 @@ impl Component for App {
             args: args,
             col_brd: vec![vec![0i8; utils::LEN]; utils::ROUNDS],
             col_alpha: vec![0i8; 26],
-            focus: (0, 0)
+            focus: (0, 0),
+            hint: String::new()
         };
         app.start();
         app
@@ -258,6 +256,7 @@ impl Component for App {
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        self.hint = String::new();
         match msg{
             Msg::Input(input, r, c) => {
                 //log::info!("typed on row {r} col {c}");
@@ -294,6 +293,13 @@ impl Component for App {
                     self.insert(c);
                 }
             }
+            Msg::SwitchMode => {
+                if self.game.rounds() == 0 || self.game.ended() || self.args.difficult {
+                    self.args.difficult ^= true;
+                } else {
+                    unreachable!();
+                }
+            }
             Msg::Reset => {
                 self.start()
             }
@@ -302,6 +308,8 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        // Header helper
+        let hard_invld_msg = "Hard mode can only be enabled at the start of a round.";
         // Board helper
         let oninput = |row, col| {ctx.link().batch_callback(move |event: InputEvent| {
             let mut s = event.data().unwrap_or(String::new());
@@ -332,14 +340,19 @@ impl Component for App {
         html! {
             <div style="text-align:center">
             // Menubar
-            //<div class={"menubar"}>
-                <input type="checkbox" id="hardmode"/>
-                /*
-                <button class={"keybr_button"} onclick={
-                    ctx.link().callback(|e: MouseEvent| Msg::SwitchMode)
-                }/>*/
+            <p>
+            if self.game.rounds() == 0 || self.game.ended() || self.args.difficult {
+                <input type="checkbox" id="hardmode" checked={self.args.difficult} oninput={
+                    ctx.link().callback(|_| Msg::SwitchMode)
+                }/>
                 <label for="hardmode">{"Hard mode"}</label>
-            //</div>
+            } else {
+                <input type="checkbox" id="hardmode" checked={self.args.difficult}
+                    disabled={true} title={hard_invld_msg}
+                />
+                <label for="hardmode" title={hard_invld_msg}>{"Hard mode"}</label>
+            }
+            </p>
             // Dashboard
             <div class={"board"}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {
@@ -369,6 +382,8 @@ impl Component for App {
                     ctx.link().callback(|_: MouseEvent| Msg::Reset)
                 }>{"Restart!"}</button>
             }
+            // Hint board
+            <p style="white-space:pre">{format!("{} ", self.hint)}</p>
             // Keyboard
             if !self.game.ended(){
                 <div class={classes!("keybr_row")}>
@@ -409,7 +424,6 @@ impl Component for App {
                     }).collect::<Html>()
                 }
                 </table>
-                //</div>
             }
             </div>
         }
