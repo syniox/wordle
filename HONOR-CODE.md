@@ -4,6 +4,7 @@ https://stackoverflow.com/questions/31276059/is-there-a-way-to-trim-a-string-wit
 
 Wasm:
 https://developer.mozilla.org/en-US/docs/Web/API/InputEvent
+for css/html/event all the way
 
 https://yew.rs/docs/concepts/html for yew html!, classes! and all the way
 
@@ -17,5 +18,7 @@ focus on a DOM element (deprecated)
 
 https://stackoverflow.com/questions/28916559/how-to-get-checkbox-label-to-be-on-the-left-of-checkbox
 
+https://github.com/Cadiac/sanuli
+for css reference
 
 game.rs: 74
