@@ -96,6 +96,7 @@ impl Stats {
         w_list.truncate(5);
         w_list
     }
+
     pub fn print_stats(&self, is_tty: bool) {
         let (win_rounds, lose_rounds, avg_guesses) = self.feed_stats();
         let w_list = self.feed_words();
@@ -114,7 +115,6 @@ impl Stats {
                 print!("{} ({} time(s))", w.0, w.1);
             }
         } else {
-            // TODO: use prettier oput
             println!("{} {} {:.2}", win_rounds, lose_rounds, avg_guesses);
             for (i, w) in w_list.iter().enumerate() {
                 if i != 0 {
@@ -169,6 +169,7 @@ impl Game {
             lim_alpha: vec![0i8; 26],
         }
     }
+
     pub fn won(&self) -> bool {
         match self.state.guesses.len() {
             0 => false,
@@ -182,6 +183,7 @@ impl Game {
             _ => self.won(),
         }
     }
+
     pub fn rounds(&self) -> usize {
         self.state.guesses.len()
     }
@@ -197,6 +199,7 @@ impl Game {
     pub fn show_col(&self) -> (&Vec<i8>, &Vec<i8>) {
         (&self.col_pos, &self.col_alpha)
     }
+
     pub fn hard_check(&self, guess: &str) -> bool {
         let mut cnt_alpha = vec![0i8; 26];
         // ensure user uses all green state
@@ -255,6 +258,7 @@ impl Game {
         guess == self.state.answer
     }
 
+    // Find words that may still be answer in the current word list
     pub fn find_valid(&self, words: Vec<String>) -> Vec<String> {
         assert!(!self.state.guesses.is_empty());
         let mut has_red = vec![false; 26];
