@@ -42,7 +42,7 @@ struct App {
     board: Vec<Vec<NodeRef>>,
     focus: (usize, usize),
     hint: String,
-    counter: bool
+    counter: bool,
 }
 
 const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -108,6 +108,7 @@ impl App {
             self.focus.1 -= 1;
         }
     }
+    // Determine whether a tile on the board should receive input
     fn disabled(&self, row: usize, col: usize) -> bool {
         return self.game.ended() || (row, col) != self.focus;
     }
@@ -147,6 +148,7 @@ impl App {
         }
         log::info!("game start: answer {}", self.game.show_answer());
     }
+
     pub fn insert(&mut self, _c: char) {
         if self.focus.1 != utils::LEN - 1 {
             self.focus_next(false);
@@ -167,6 +169,7 @@ impl App {
         }
         elm.set_value("");
     }
+
     pub fn linebreak(&mut self) {
         // Collect the word
         let guess = self.board[self.focus.0]
@@ -213,14 +216,12 @@ where
     <T as yew::Component>::Message: From<Msg>,
 {
     html! {
-        {
-            arr.iter().map(|c| html! {
-                <KeybrButton character={c.to_string()}
-                    onclick={&ctx.link().callback(|_: MouseEvent| Msg::Click(*c))}
-                    key_col={id2background(col[*c as usize - 'A' as usize])}
-                    />
-            }).collect::<Html>()
-        }
+        arr.iter().map(|c| html! {
+            <KeybrButton character={c.to_string()}
+                onclick={&ctx.link().callback(|_: MouseEvent| Msg::Click(*c))}
+                key_col={id2background(col[*c as usize - 'A' as usize])}
+                />
+        }).collect::<Html>()
     }
 }
 
@@ -251,7 +252,7 @@ impl Component for App {
             col_alpha: vec![0i8; 26],
             focus: (0, 0),
             hint: String::new(),
-            counter: false
+            counter: false,
         };
         app.start();
         app
@@ -365,7 +366,7 @@ impl Component for App {
                 <label for="hardmode" title={hard_invld_msg}>{"Hard mode"}</label>
             }
             </p>
-            // Dashboard
+            // Board
             <div class={"board"} onclick={refresh}> {
                 self.board.iter().enumerate().map(|(row, x)| html! {
                     <div class={"row"}> {

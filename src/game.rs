@@ -63,7 +63,7 @@ impl Stats {
         self.total_rounds += 1;
         self.games.push(game.state);
     }
-    // return win_rounds, lose_rounds, avg_guesses
+    // Calculate win_rounds, lose_rounds, avg_guesses
     pub fn feed_stats(&self) -> (i32, i32, f64) {
         let (win_rounds, win_guesses) = self
             .games
@@ -79,6 +79,7 @@ impl Stats {
         };
         (win_rounds, lose_rounds, avg_guesses)
     }
+    // Find words that used most
     pub fn feed_words(&self) -> Vec<(&str, i32)> {
         let mut map = HashMap::<&str, i32>::new();
         // load stats into helper vaiables
@@ -89,7 +90,7 @@ impl Stats {
                     .or_insert(1);
             }
         }
-        // Find words that used most
+
         let mut w_list: Vec<(&str, i32)> = map.into_iter().collect();
         w_list.sort_by(|(s1, i1), (s2, i2)| Self::stat_cmp((s1, i1), (s2, i2)));
         w_list.reverse();
@@ -100,6 +101,7 @@ impl Stats {
     pub fn print_stats(&self, is_tty: bool) {
         let (win_rounds, lose_rounds, avg_guesses) = self.feed_stats();
         let w_list = self.feed_words();
+
         if is_tty {
             let win_colored = console::style(format!("Win: {}", win_rounds)).green();
             let lose_colored = console::style(format!("Lose: {}", lose_rounds)).red();
@@ -228,7 +230,7 @@ impl Game {
             cnt_alpha[Self::alpha2id(ca)] += 1;
         }
         let req_alpha = cnt_alpha.clone();
-        // color good position to G
+        // Color good position to Green
         for (i, (ca, cg)) in zip(answer.chars(), guess.chars()).enumerate() {
             if ca == cg {
                 let alpha_id = Self::alpha2id(ca);
@@ -238,7 +240,7 @@ impl Game {
                 self.col_alpha[alpha_id] = color_id;
             }
         }
-        // color other position
+        // Color other position
         for (i, (ca, cg)) in zip(answer.chars(), guess.chars()).enumerate() {
             let alpha_id = Self::alpha2id(cg);
             if ca != cg {
@@ -248,7 +250,7 @@ impl Game {
                 apmax(&mut self.col_alpha[alpha_id], color_id);
             }
         }
-        // calc how many times should an alpha be used at least
+        // Calc how many times should an alpha be used at least
         for a in 0..self.lim_alpha.len() {
             apmax(
                 &mut self.lim_alpha[a],

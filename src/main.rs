@@ -18,6 +18,7 @@ mod words;
 
 mod builtin_words;
 
+// Give hints until user type A word
 fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -> String {
     loop {
         match utils::read_word(words) {
