@@ -3,6 +3,7 @@ use std::{fs, io};
 
 pub const ROUNDS: usize = 6;
 pub const LEN: usize = 5;
+pub const ALPHAS: usize = 26;
 
 pub type ErrorT = Box<dyn std::error::Error>;
 

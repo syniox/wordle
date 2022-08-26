@@ -166,9 +166,9 @@ impl Game {
     pub fn new() -> Game {
         Game {
             state: State::new(),
-            col_alpha: vec![0i8; 26],
+            col_alpha: vec![0i8; utils::ALPHAS],
             col_pos: vec![0i8; utils::LEN],
-            lim_alpha: vec![0i8; 26],
+            lim_alpha: vec![0i8; utils::ALPHAS],
         }
     }
 
@@ -203,7 +203,7 @@ impl Game {
     }
     // Check whether the word meets the requirement of hard mode
     pub fn hard_check(&self, guess: &str) -> bool {
-        let mut cnt_alpha = vec![0i8; 26];
+        let mut cnt_alpha = vec![0i8; utils::ALPHAS];
         // ensure user uses all green state
         for (i, (ca, cg)) in zip(self.state.answer.chars(), guess.chars()).enumerate() {
             let col = Self::id2color(self.col_pos[i]);
@@ -225,7 +225,7 @@ impl Game {
         assert!(guess.len() == utils::LEN);
         self.state.guesses.push(guess.clone());
         let answer = self.state.answer.clone();
-        let mut cnt_alpha = vec![0i8; 26];
+        let mut cnt_alpha = vec![0i8; utils::ALPHAS];
         for ca in answer.chars() {
             cnt_alpha[Self::alpha2id(ca)] += 1;
         }
@@ -263,8 +263,8 @@ impl Game {
     // Find words that may still be answer in the current word list
     pub fn find_valid(&self, words: Vec<String>) -> Vec<String> {
         assert!(!self.state.guesses.is_empty());
-        let mut has_red = vec![false; 26];
-        let mut ulim_alpha = vec![0i8; 26];
+        let mut has_red = vec![false; utils::ALPHAS];
+        let mut ulim_alpha = vec![0i8; utils::ALPHAS];
         let guess = self.state.guesses.last().unwrap();
         for (i, c) in guess.chars().enumerate() {
             if self.col_pos[i] >= Self::color2id('Y') {
@@ -281,7 +281,7 @@ impl Game {
 
         words.into_iter()
             .filter(|word| {
-                let mut cnt_alpha = [0i8; 26];
+                let mut cnt_alpha = [0i8; utils::ALPHAS];
                 let mut invld = false;
                 // invalid green position
                 invld |= self.state.answer.chars()
@@ -296,7 +296,7 @@ impl Game {
                 // invalid char count
                 word.chars()
                     .for_each(|c| cnt_alpha[Self::alpha2id(c) as usize] += 1);
-                for i in 0..26 {
+                for i in 0..utils::ALPHAS {
                     if cnt_alpha[i] > ulim_alpha[i] || cnt_alpha[i] < self.lim_alpha[i] {
                         invld |= true;
                     }
