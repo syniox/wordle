@@ -249,7 +249,7 @@ impl Component for App {
             words: words::Words::new(&args),
             args: args,
             col_brd: vec![vec![0i8; utils::LEN]; utils::ROUNDS],
-            col_alpha: vec![0i8; 26],
+            col_alpha: vec![0i8; utils::ALPHAS],
             focus: (0, 0),
             hint: String::new(),
             counter: false,
