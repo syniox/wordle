@@ -4,4 +4,5 @@ wget -qO- https://github.com/thedodd/trunk/releases/download/${VERSION}/trunk-x8
 source "$HOME/.cargo/env"
 rustup target add wasm32-unknown-unknown
 cargo install --locked trunk
+sed 's/main.rs/web_app.rs/g' -i Cargo.toml
 trunk build --release
