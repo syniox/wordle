@@ -34,7 +34,7 @@ fn read_word_hinted(args: &Args, game: &Game, words: Option<&HashSet<String>>) -
             }
             Err(e) => {
                 if args.tty {
-                    utils::warn(&format!("{}, please type a correct 5-character word.", e));
+                    utils::warn(&format!("{}, please type a 5-character word.", e));
                 } else {
                     println!("INVALID")
                 }

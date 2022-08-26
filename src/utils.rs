@@ -48,7 +48,7 @@ pub fn read_word(words: Option<&HashSet<String>>) -> Result<String, ErrorT> {
         if w.contains(&line) {
             Ok(line)
         } else {
-            Err(ErrorT::from(format!("{} isn't a correct word", line)))
+            Err(ErrorT::from(format!("{} isn't a word", line)))
         }
     } else {
         Ok(line)

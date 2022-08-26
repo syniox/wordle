@@ -21,4 +21,5 @@ https://stackoverflow.com/questions/28916559/how-to-get-checkbox-label-to-be-on-
 https://github.com/Cadiac/sanuli
 for css reference
 
-game.rs: 74
+credit: https://www.ditig.com/256-colors-cheat-sheet
+tty color reference

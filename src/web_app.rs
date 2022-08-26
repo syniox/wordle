@@ -128,7 +128,7 @@ impl App {
         });
         // Ensure focus
         self.focus = (0, 0);
-
+        // Get answer for the game
         if let Some(w) = self.args.word.as_ref() {
             log::info!("answer copied from {}", w);
             self.game.set_answer(w.clone());
@@ -191,6 +191,7 @@ impl App {
             self.hint = format!("{}: must use information revealed before.", guess);
             return;
         }
+
         self.game.guess(guess);
         // Colorize
         let (col_pos, col_alpha) = self.game.show_col();
