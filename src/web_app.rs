@@ -42,6 +42,7 @@ struct App {
     board: Vec<Vec<NodeRef>>,
     focus: (usize, usize),
     hint: String,
+    counter: bool
 }
 
 const KEYBOARD_0: [char; 10] = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -249,6 +250,7 @@ impl Component for App {
             col_alpha: vec![0i8; 26],
             focus: (0, 0),
             hint: String::new(),
+            counter: false
         };
         app.start();
         app
@@ -260,6 +262,7 @@ impl Component for App {
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         self.hint = String::new();
+        self.counter ^= true;
         match msg {
             // Handle inputs expect backspace and Enter
             Msg::Input(input) => {
@@ -319,8 +322,9 @@ impl Component for App {
         let hard_invld_msg = "Hard mode can only be enabled at the start of a round.";
         // Board helper
         let oninput = &ctx.link().batch_callback(|event: InputEvent| {
-            let mut s = event.data().unwrap_or(String::new());
-            if s.is_empty() || (s.len() == 1 && s.pop().unwrap().is_alphabetic()) {
+            let ch = event.data().unwrap_or_default().pop().unwrap_or('a');
+            if event.input_type() == "insertText" && ch.is_ascii_alphabetic() {
+                log::info!("input: {} {}", event.data().unwrap_or_default(), ch);
                 Some(Msg::Input(event))
             } else {
                 event.prevent_default();
@@ -375,6 +379,7 @@ impl Component for App {
                                     id2background(self.col_brd[row][col])
                                 )
                             }
+                            pattern="[a-zA-Z]"
                             disabled={self.disabled(row, col)}
                             />
                         }).collect::<Html>()
@@ -391,18 +396,18 @@ impl Component for App {
 
             if !self.game.ended(){
                 // Hint board
-                <p style="white-space:pre">{format!("{} ", self.hint)}</p>
+                <p class={format!("hint-{}", self.counter as i8)}>{format!("{} ", self.hint)}</p>
                 // Keyboard
                 <div class={classes!("keybr_row")}>
-                { keybr_r0 }
+                    { keybr_r0 }
                 </div>
                 <div class={classes!("keybr_row")}>
-                { keybr_r1 }
+                    { keybr_r1 }
                 </div>
                 <div class={classes!("keybr_row")}>
-                <KeybrButton character="Enter" onclick={onclick('\n')} key_col={"grep"}/>
-                { keybr_r2 }
-                <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
+                    <KeybrButton character="Enter" onclick={onclick('\n')} key_col={"grep"}/>
+                    { keybr_r2 }
+                    <KeybrButton character="Backspace" onclick={onclick('\x08')} key_col={"grep"}/>
                 </div>
             }
             // Statistics

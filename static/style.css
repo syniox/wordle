@@ -40,6 +40,33 @@
     text-align: center;
 }
 
+.tile:invalid {
+    border: 2px red solid;
+    outline: 1px red solid;
+}
+
+.hint-0 {
+    white-space: pre;
+    animation: shake-0 0.12s;
+    animation-delay: 0.05s;
+    animation-iteration-count: 2;
+}
+.hint-1 {
+    white-space: pre;
+    animation: shake-1 0.12s;
+    animation-delay: 0.05s;
+    animation-iteration-count: 2;
+}
+
+@keyframes shake-0 {
+    25% {transform: translate(-1px, 0px); }
+    75% {transform: translate(1px, 0px); }
+}
+@keyframes shake-1 {
+    25% {transform: translate(-1px, 0px); }
+    75% {transform: translate(1px, 0px); }
+}
+
 .keybr-row {
     display: flex;
     justify-content: center;
