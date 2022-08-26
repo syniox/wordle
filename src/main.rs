@@ -132,6 +132,10 @@ fn main() -> Result<(), utils::ErrorT> {
             stats.store_game(game);
             stats.print_stats(args.tty);
         }
+        // Save state to json
+        if let Some(file) = args.state.as_ref() {
+            utils::str_to_file(serde_json::to_string_pretty(&stats)?.as_str(), file);
+        }
         // find out whether the program should continue
         if args.word.is_none() {
             if args.tty {
@@ -152,10 +156,6 @@ fn main() -> Result<(), utils::ErrorT> {
         } else {
             break;
         }
-    }
-    // Save state to json
-    if let Some(file) = args.state {
-        utils::str_to_file(serde_json::to_string_pretty(&stats)?.as_str(), &file);
     }
     Ok(())
 }
